@@ -38,5 +38,11 @@ To screenshot a specific in-app view, python-inject a `<script>` before `</body>
 - Audience is **designers/PMs**, not only engineers — keep prototypes visual and self-explanatory.
 - Repo convention (see repo-root `../CLAUDE.md`): every deliverable is one self-contained `.html`; dark + teal Motadata theme; tokens redeclared per file.
 
+## Deployment
+Repo: https://github.com/kisu1311/APM_Profiling_-_dumps
+Live URL: https://kisu1311.github.io/APM_Profiling_-_dumps/
+Static site (index.html at root) → GitHub Pages via `.github/workflows/deploy.yml` (source = GitHub Actions). Redeploys on every push to `main`. Published without `gh` (not installed) — used git + the GitHub REST API with the osxkeychain token; a future `/publish` can just commit & push.
+Note: internal IPs/hostnames are scrubbed to RFC5737 documentation ranges (`192.0.2.x` / `198.51.100.x`) and `example.net` before publishing — keep it that way (this is a public repo).
+
 ## Handoff
 Latest session state is in [HANDOFF.md](HANDOFF.md) — read it first.
