@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ObserveOps APM · Profiling &amp; Dumps — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07101f;--bg2:#0a1728;--nav:#0c1a2e;--card:#11223a;--card2:#0e1d33;--card3:#152a45;
+  --border:#18304a;--border2:#22405f;--text:#c2d4e8;--head:#eaf2fb;--muted:#5f7ca8;--muted2:#42618c;
+  --teal:#14b8a6;--teal-d:#0d8276;--blue:#009ddc;--purple:#8b7cf6;
+  --red:#f25c4e;--orange:#f58518;--yellow:#f5bc18;--green:#89c540;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+.mono{font-family:var(--mono)}
+h1,h2,h3,h4{margin:0;color:var(--head);font-weight:700}
+button{font-family:inherit;cursor:pointer}
+::selection{background:rgba(20,184,166,.3)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== SHELL ===== */
+.shell{display:flex;height:100vh;width:100vw}
+.iconrail{width:52px;background:linear-gradient(180deg,#08101d,#0a1526);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:4px;flex-shrink:0}
+.iconrail .logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--blue));color:#04121f;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.iconrail .ic{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);position:relative}
+.iconrail .ic:hover{background:var(--card);color:var(--text)}
+.iconrail .ic.on{background:rgba(20,184,166,.14);color:var(--teal)}
+.iconrail .ic.on::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--teal)}
+.iconrail .ic svg{width:18px;height:18px}
+.iconrail .sp{flex:1}
+
+.pillar{width:210px;background:var(--nav);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.pillar .ph{padding:14px 16px 8px}
+.pillar .ph b{font-size:15px;color:var(--head);letter-spacing:-.01em}
+.pillar .ph .bd{font-size:9.5px;color:var(--muted2);font-family:var(--mono);margin-top:2px}
+.search{margin:4px 12px 8px;background:var(--card);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:7px;padding:7px 9px;color:var(--muted);font-size:11.5px}
+.search svg{width:13px;height:13px;flex-shrink:0}
+.search .k{margin-left:auto;font-family:var(--mono);font-size:9px;border:1px solid var(--border2);border-radius:4px;padding:0 4px;color:var(--muted2)}
+.plist{padding:2px 8px;overflow-y:auto}
+.plist .pi{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;color:var(--muted);font-size:12.5px;font-weight:500;border:1px solid transparent}
+.plist .pi:hover{background:var(--card);color:var(--text)}
+.plist .pi.on{background:rgba(20,184,166,.12);color:var(--head);border-color:rgba(20,184,166,.28)}
+.plist .pi svg{width:15px;height:15px;flex-shrink:0}
+.plist .pi .nw{margin-left:auto;font-size:8px;letter-spacing:.06em;color:var(--teal);border:1px solid rgba(20,184,166,.4);border-radius:100px;padding:0 5px;font-weight:700}
+.plist .sec{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted2);padding:14px 10px 5px;font-weight:600}
+.tree .tn{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.tree .tn:hover{background:var(--card);color:var(--text)}
+.tree .tn.app{color:var(--text);font-weight:500}
+.tree .tn.child{padding-left:26px;font-family:var(--mono);font-size:11px}
+.tree .dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.tree .dot.off{background:var(--muted2)}
+.tree .tech{margin-left:auto;font-size:9px;color:var(--muted2);font-family:var(--mono)}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:50px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:14px;background:var(--bg2);flex-shrink:0}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);min-width:0;overflow:hidden;white-space:nowrap}
+.crumb .c{color:var(--muted);cursor:pointer}
+.crumb .c:hover{color:var(--text)}
+.crumb .c.cur{color:var(--head);font-weight:600;cursor:default}
+.crumb .sep{color:var(--muted2)}
+.topbar .sp{flex:1}
+.envsel{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:11.5px;color:var(--text)}
+.envsel b{color:var(--teal);font-family:var(--mono)}
+.tpills{display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.tpills button{background:none;border:none;color:var(--muted);font-size:11.5px;padding:6px 11px}
+.tpills button.on{background:var(--teal);color:#04121f;font-weight:600}
+.proto{font-size:9.5px;font-weight:700;letter-spacing:.08em;color:var(--orange);border:1px solid rgba(245,133,24,.4);background:rgba(245,133,24,.1);border-radius:6px;padding:4px 8px}
+.doclink{font-size:11px;color:var(--teal);text-decoration:none;border:1px solid rgba(20,184,166,.3);border-radius:6px;padding:5px 9px}
+.doclink:hover{background:rgba(20,184,166,.1)}
+
+.content{flex:1;overflow-y:auto;padding:20px 24px 60px;position:relative}
+.viewhead{margin-bottom:16px}
+.viewhead h2{font-size:19px;letter-spacing:-.01em}
+.viewhead p{margin:5px 0 0;color:var(--muted);font-size:12.5px;max-width:80ch}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ===== primitives ===== */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px}
+.pad{padding:16px 18px}
+.row{display:flex;gap:14px}
+.gap8{gap:8px}
+.between{justify-content:space-between;align-items:center}
+.wrapc{flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{background:none;border:none;color:var(--muted);font-size:11.5px;padding:6px 12px;border-right:1px solid var(--border)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--card3);color:var(--head);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:500}
+.btn:hover{border-color:var(--teal);color:var(--head)}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#04121f;font-weight:600}
+.btn.primary:hover{background:#19cbb8}
+.btn svg{width:14px;height:14px}
+.btn.sm{padding:5px 9px;font-size:11px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-family:var(--mono);color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:4px 9px}
+.chip.on{color:#04121f;background:var(--teal);border-color:var(--teal);font-weight:600}
+.chip.clk{cursor:pointer}
+.chip.clk:hover{border-color:var(--teal);color:var(--text)}
+.chip.on.clk:hover{color:#04121f}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:14px;flex-wrap:wrap}
+.tabs button{background:none;border:none;color:var(--muted);font-size:12.5px;padding:9px 14px;border-bottom:2px solid transparent;font-weight:500}
+.tabs button:hover{color:var(--text)}
+.tabs button.on{color:var(--head);border-bottom-color:var(--teal)}
+.tabs button .ic{width:13px;height:13px;vertical-align:-2px;margin-right:5px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:100px;border:1px solid}
+.pill.crit{color:var(--red);border-color:rgba(242,92,78,.4);background:rgba(242,92,78,.1)}
+.pill.warn{color:var(--orange);border-color:rgba(245,133,24,.4);background:rgba(245,133,24,.1)}
+.pill.ok{color:var(--green);border-color:rgba(137,197,64,.4);background:rgba(137,197,64,.1)}
+.pill.info{color:var(--blue);border-color:rgba(0,157,220,.4);background:rgba(0,157,220,.1)}
+.muted{color:var(--muted)}.small{font-size:11px}
+
+/* grids/tables */
+.grid{width:100%;border-collapse:collapse;font-size:12.5px}
+.grid th{text-align:left;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--border)}
+.grid td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--muted)}
+.grid tr:last-child td{border-bottom:none}
+.grid tr.clk{cursor:pointer}
+.grid tr.clk:hover td{background:var(--card2)}
+.grid td b,.grid .nm{color:var(--head);font-weight:600}
+.grid .mono{font-size:11.5px}
+.svcname{display:inline-flex;align-items:center;gap:7px}
+.tk{width:16px;height:16px;border-radius:4px;font-size:8px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.tk.java{background:#e76f00}.tk.node{background:#539e43}.tk.net{background:#512bd4}.tk.php{background:#777bb3}.tk.py{background:#3572a5}.tk.rb{background:#cc342d}
+.mbar{height:7px;border-radius:4px;background:var(--card3);position:relative;overflow:hidden;min-width:70px}
+.mbar>span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--teal-d))}
+.mbar.b>span{background:linear-gradient(90deg,var(--blue),#0a6b96)}
+.mbar.r>span{background:linear-gradient(90deg,var(--red),#a83a30)}
+
+/* toggle */
+.tg{width:34px;height:19px;border-radius:100px;background:var(--teal);position:relative;cursor:pointer;transition:background .18s;display:inline-block;vertical-align:middle}
+.tg::after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:#04121f;top:2px;left:17px;transition:left .18s}
+.tg.off{background:var(--border2)}
+.tg.off::after{left:2px}
+
+/* charts */
+.chartbox{position:relative}
+.chartbox svg{display:block;width:100%}
+.axlabel{font-size:9px;fill:var(--muted2);font-family:var(--mono)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--muted);margin-top:8px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+
+/* flame graph */
+.fgtool{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.fgtool .lab{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em}
+.flamewrap{position:relative;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;overflow:hidden}
+.flame{position:relative;width:100%}
+.frame{position:absolute;height:19px;border-radius:3px;font-size:10px;color:#04121f;display:flex;align-items:center;padding:0 5px;overflow:hidden;white-space:nowrap;cursor:pointer;font-weight:600;border:1px solid rgba(4,18,31,.25);transition:filter .1s}
+.frame:hover{filter:brightness(1.15);outline:1px solid #fff;z-index:3}
+.frame.dim{opacity:.4}
+.fc-web{background:#14b8a6}.fc-rt{background:#009ddc}.fc-app{background:#8b7cf6;color:#fff}.fc-db{background:#89c540}.fc-io{background:#f58518}.fc-gc{background:#f5bc18}.fc-ex{background:#f25c4e;color:#fff}
+.fc-oth{background:#33547a;color:#c2d4e8}
+.frame.self{background:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,.06) 4px,rgba(255,255,255,.06) 8px)}
+.fgtip{position:fixed;z-index:99;background:#04101d;border:1px solid var(--border2);border-radius:8px;padding:8px 11px;font-size:11px;color:var(--text);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;max-width:280px}
+.fgtip b{color:var(--head)}
+.fgtip .k{color:var(--muted)}
+.fgtip .v{color:var(--teal);font-family:var(--mono)}
+
+/* inspector */
+.workspace{display:grid;grid-template-columns:1fr 300px;gap:14px}
+@media(max-width:1200px){.workspace{grid-template-columns:1fr}}
+.insp{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:12px}
+.insp h4{font-size:12px;margin-bottom:4px}
+.insp .il{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted2);margin:14px 0 7px;font-weight:600}
+.insp .il:first-child{margin-top:0}
+.crow{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11.5px}
+.crow .nm{color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.crow .mono{color:var(--muted);font-size:10.5px}
+.crow .mbar{flex:0 0 60px}
+.aicard{background:linear-gradient(135deg,rgba(20,184,166,.12),rgba(0,157,220,.06));border:1px solid rgba(20,184,166,.3);border-radius:9px;padding:11px}
+.aicard .t{font-size:11px;color:var(--teal);font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.aicard p{margin:0;font-size:11.5px;color:var(--text);line-height:1.5}
+
+/* thread timeline */
+.tl{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.tlrow{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px}
+.tlrow .thn{width:120px;color:var(--muted);font-family:var(--mono);font-size:10.5px;flex-shrink:0;text-align:right}
+.tllane{flex:1;height:14px;border-radius:3px;background:var(--card);position:relative;overflow:hidden}
+.tllane span{position:absolute;top:0;bottom:0;border-radius:2px}
+.st-run{background:#14b8a6}.st-sock{background:#009ddc}.st-wait{background:#f25c4e}.st-safe{background:#5f7ca8}.st-gc{background:#f5bc18}
+
+/* callgraph */
+.cg{display:flex;flex-direction:column;gap:0;align-items:flex-start;padding:8px}
+.cgn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:7px 11px;font-size:12px;margin:4px 0;position:relative}
+.cgn .self{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:6px}
+.cgconn{color:var(--muted2);margin-left:20px;font-family:var(--mono)}
+
+/* stub */
+.stub{text-align:center;padding:70px 20px;color:var(--muted)}
+.stub .ic{width:54px;height:54px;border-radius:14px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--muted2)}
+.stub h3{font-size:16px;margin-bottom:6px}
+.stub p{max-width:46ch;margin:0 auto 16px}
+
+/* flow map */
+.flowbtn{position:fixed;right:18px;bottom:18px;z-index:40;background:var(--teal);color:#04121f;border:none;border-radius:100px;padding:10px 16px;font-size:12px;font-weight:700;box-shadow:0 8px 24px rgba(20,184,166,.35);display:flex;align-items:center;gap:7px}
+.flowmap{position:fixed;right:18px;bottom:64px;z-index:41;width:290px;background:#081627;border:1px solid var(--border2);border-radius:14px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);display:none}
+.flowmap.open{display:block}
+.flowmap h4{font-size:12px;margin-bottom:3px}
+.flowmap .sub{font-size:10.5px;color:var(--muted);margin-bottom:11px}
+.fstep{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:8px;cursor:pointer;position:relative}
+.fstep:hover{background:var(--card)}
+.fstep.on{background:rgba(20,184,166,.12)}
+.fstep .n{width:20px;height:20px;border-radius:50%;background:var(--card);border:1px solid var(--border2);color:var(--muted);font-size:10px;font-family:var(--mono);display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2}
+.fstep.on .n,.fstep.done .n{background:var(--teal);color:#04121f;border-color:var(--teal)}
+.fstep:not(:last-child)::after{content:"";position:absolute;left:17px;top:26px;bottom:-4px;width:1px;background:var(--border2)}
+.fstep .ft{font-size:12px;color:var(--text);font-weight:600}
+.fstep .fd{font-size:10.5px;color:var(--muted)}
+.fstep.on .ft{color:var(--head)}
+.note{border-left:3px solid var(--teal);background:linear-gradient(90deg,rgba(20,184,166,.08),transparent);border-radius:0 8px 8px 0;padding:10px 13px;margin:12px 0;font-size:12px}
+.note b{color:var(--head)}
+.note .l{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:700;display:block;margin-bottom:3px}
+.donut{display:flex;align-items:center;gap:16px}
+.hl{color:var(--head);font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- icon rail -->
+  <div class="iconrail">
+    <div class="logo">M</div>
+    <div class="ic" title="Dashboards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div>
+    <div class="ic" title="Monitors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div>
+    <div class="ic" title="Metrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+    <div class="ic" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+    <div class="ic on" title="APM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg></div>
+    <div class="ic" title="RUM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+    <div class="ic" title="Alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+    <div class="ic" title="Topology"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 7l4 9M17 7l-4 9"/></svg></div>
+    <div class="sp"></div>
+    <div class="ic" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 00-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 00-1.7-1L14.5 2h-5l-.3 2.5a7 7 0 00-1.7 1l-2.4-1-2 3.5L3 11a7 7 0 000 2l-2 1.5 2 3.5 2.4-1a7 7 0 001.7 1l.3 2.5h5l.3-2.5a7 7 0 001.7-1l2.4 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg></div>
+  </div>
+
+  <!-- pillar nav -->
+  <div class="pillar">
+    <div class="ph"><b>APM</b><div class="bd">BUILD 8.2.6 · prototype</div></div>
+    <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><span>Search service, method…</span><span class="k">⌘K</span></div>
+    <div class="plist" style="flex:1">
+      <div class="pi" data-nav="stub" data-title="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="pi" data-nav="stub" data-title="Services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg>Services</div>
+      <div class="pi" data-nav="stub" data-title="Traces &amp; Spans"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h13M10 18h10M4 12v0M7 18v0"/></svg>Traces &amp; Spans</div>
+      <div class="pi on" data-nav="prof-explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="6" y="12" width="3" height="6"/><rect x="11" y="8" width="3" height="10"/><rect x="16" y="5" width="3" height="13"/></svg>Profiling<span class="nw">NEW</span></div>
+      <div class="pi" data-nav="dumps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Dumps<span class="nw">NEW</span></div>
+      <div class="pi" data-nav="stub" data-title="Databases"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3 3 7 3s7-1.3 7-3V6"/></svg>Databases</div>
+      <div class="pi" data-nav="stub" data-title="Errors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v0"/></svg>Errors</div>
+      <div class="pi" data-nav="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>Compare</div>
+      <div class="pi" data-nav="stub" data-title="Deployments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 6 .5-4.5 4 1.5 6-6-3.5L6 18.5 7.5 12.5 3 8.5 9 8z"/></svg>Deployments</div>
+      <div class="pi" data-nav="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 12a7 7 0 00-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 00-1.7-1L14.5 2h-5l-.3 2.5a7 7 0 00-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 000 2l-2 1.5 2 3.5 2.4-1a7 7 0 001.7 1l.3 2.5h5l.3-2.5a7 7 0 001.7-1l2.4 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg>Settings</div>
+      <div class="sec">Applications</div>
+      <div class="tree">
+        <div class="tn app" data-app="store-backend"><span class="dot"></span>store-backend<span class="tech">java</span></div>
+        <div class="tn child" data-nav="prof-detail" data-proc="web">process: web</div>
+        <div class="tn child" data-nav="prof-detail" data-proc="worker">process: worker</div>
+        <div class="tn app" data-app="store-frontend"><span class="dot off"></span>store-frontend-api<span class="tech">node</span></div>
+        <div class="tn app" data-app="store-worker"><span class="dot"></span>store-worker<span class="tech">java</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb" id="crumb"></div>
+      <div class="sp"></div>
+      <div class="envsel"><span class="muted">env</span><b>prod</b><span class="muted">·</span><span class="muted">ver</span><b>1.5.0</b></div>
+      <div class="tpills"><button>1h</button><button>24h</button><button class="on">7d</button><button>30d</button></div>
+      <span class="proto">● PROTOTYPE</span>
+      <a class="doclink" href="apm-profiling-dumps-redesign.html" title="Open the strategy document">◧ Strategy doc</a>
+    </div>
+    <div class="content" id="content">
+
+      <!-- ========== SETTINGS ========== -->
+      <section class="view" id="v-settings">
+        <div class="viewhead"><h2>Application Registration</h2><p>Instrument an app, then flip <b>Profiling</b> and <b>Dumps</b> on per application. Turning Profiling on reveals the Continuous-profile entry in the Explorer.</p></div>
+        <div class="card">
+          <table class="grid">
+            <thead><tr><th>Application</th><th>Language</th><th>Instrumented</th><th>Profiling</th><th>Dumps</th><th>Sample rate</th><th>Retention</th></tr></thead>
+            <tbody id="regbody"></tbody>
+          </table>
+        </div>
+        <div class="note"><span class="l">From the spec</span><b>Application Registration → Add (on/off) option.</b> The toggle gates data collection &amp; cost per app — exactly how Datadog and Dynatrace enable profiling. Try flipping <span class="hl">store-frontend-api</span> on.</div>
+      </section>
+
+      <!-- ========== PROFILING EXPLORER ========== -->
+      <section class="view" id="v-prof-explorer">
+        <div class="viewhead"><h2>Profiling · Continuous profile</h2><p>The always-on entry. CPU consumption across processes, then drill into any row. <span class="muted">Visible because store-backend has Profiling <b class="hl">on</b>.</span></p></div>
+        <div class="card pad" style="margin-bottom:14px">
+          <div class="row between wrapc" style="margin-bottom:12px">
+            <div class="row gap8" style="align-items:center"><b style="font-size:13px">CPU consumption</b><span class="pill info">last 7d</span></div>
+            <div class="row gap8">
+              <div class="seg" id="splitby"><button class="on" data-split="proc">Processes</button><button data-split="svc">Services</button></div>
+              <div class="seg" id="charttype"><button class="on" data-ct="line">Line</button><button data-ct="bar">Bar</button><button data-ct="area">Area</button></div>
+            </div>
+          </div>
+          <div class="chartbox" id="cpuchart"></div>
+          <div class="legend" id="cpulegend"></div>
+        </div>
+        <div class="card">
+          <div class="pad between row" style="border-bottom:1px solid var(--border)"><b style="font-size:13px" id="gridtitle">12 processes</b><span class="chip">▾ Consumed CPU</span></div>
+          <table class="grid"><thead><tr><th>Name</th><th>Technology</th><th>CPU in GC</th><th>Consumed CPU</th><th></th></tr></thead><tbody id="procbody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- ========== PROCESS DETAIL ========== -->
+      <section class="view" id="v-prof-detail">
+        <div class="viewhead"><h2 id="detailtitle">store-backend · process: web</h2><p>Split by process or service; four metric tabs; then jump to code-level analysis. <span class="muted">1 service ▸ contributors only · N services ▸ + top services.</span></p></div>
+        <div class="tabs" id="metrictabs">
+          <button class="on" data-m="rt">Response time</button>
+          <button data-m="fr">Failure rate</button>
+          <button data-m="cpu">CPU</button>
+          <button data-m="tp">Throughput</button>
+        </div>
+        <div class="row" style="align-items:stretch;gap:14px;margin-bottom:14px">
+          <div class="card pad" style="flex:1">
+            <div class="row between" style="margin-bottom:10px"><div class="seg" id="subview"></div><span class="chip clk">Create analysis view</span></div>
+            <div class="chartbox" id="detailchart"></div>
+          </div>
+          <div class="card pad" style="flex:0 0 250px">
+            <div class="il" style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted2);font-weight:600;margin-bottom:10px">Code-level actions</div>
+            <button class="btn primary" style="width:100%;justify-content:center;margin-bottom:8px" data-nav="prof-hotspots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v4M12 3v2M16 3v4M5 11h14l-1 8H6z"/></svg>View method hotspots</button>
+            <button class="btn" style="width:100%;justify-content:center;margin-bottom:8px" data-nav="prof-flame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s4 4 4 8a4 4 0 01-8 0c0-1 .5-2 .5-2S8 10 8 12a4 4 0 108 0"/></svg>Open flame graph</button>
+            <button class="btn" style="width:100%;justify-content:center" data-nav="prof-hotspots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Analyze outliers</button>
+            <div style="margin-top:14px" class="small muted">Metric: <b class="hl" id="metricname">Median response time</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="pad between row" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Top contributors <span class="muted small">· attached services + child processes</span></b><span class="chip">▾ Contribution</span></div>
+          <table class="grid"><thead><tr><th>Name</th><th>Type</th><th>Contribution</th><th>Throughput</th><th>CPU</th><th></th></tr></thead><tbody id="contribbody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- ========== METHOD HOTSPOTS ========== -->
+      <section class="view" id="v-prof-hotspots">
+        <div class="viewhead"><h2>Method Hotspots · store-backend / web</h2><p>Understand CPU at the method level. Filter <b>Execution time</b> or <b>Top APIs</b> and the Call hierarchy + Hotspots re-scope automatically.</p></div>
+        <div class="tabs" id="hstabs">
+          <button data-h="api">Top APIs</button>
+          <button class="on" data-h="exec">Execution time</button>
+          <button data-h="call">Call hierarchy</button>
+          <button data-h="hot">Hotspots</button>
+        </div>
+        <div class="workspace" style="grid-template-columns:280px 1fr">
+          <div class="card pad">
+            <div class="il" style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted2);font-weight:600;margin-bottom:12px">Execution-time breakdown</div>
+            <div class="donut"><svg id="execdonut" viewBox="0 0 100 100" width="100" height="100"></svg>
+              <div id="execlegend" style="font-size:11.5px"></div>
+            </div>
+            <div class="note" style="margin:14px 0 0"><span class="l">Filter inheritance</span>Click a category → the Call hierarchy &amp; Hotspots on the right filter to it.</div>
+          </div>
+          <div class="card pad">
+            <div class="row between" style="margin-bottom:12px"><b style="font-size:13px" id="hstitle">Call hierarchy (forward) + Hotspots (reverse)</b><span class="chip clk" data-nav="prof-flame">Open in flame graph ▸</span></div>
+            <div id="hstree"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== FLAME GRAPH WORKSPACE ========== -->
+      <section class="view" id="v-prof-flame">
+        <div class="viewhead"><h2>Flame Graph · store-backend</h2><p>The multi-pane workspace. Switch metric, hover any frame for exact cost, <b>click to zoom</b>. The right rail &amp; bottom timeline stay in sync.</p></div>
+        <div class="tabs" id="flametabs">
+          <button class="on" data-f="flame"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s4 4 4 8a4 4 0 01-8 0c0-1 .5-2 .5-2S8 10 8 12a4 4 0 108 0"/></svg>Flame Graph</button>
+          <button data-f="timeline"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Thread Timeline</button>
+          <button data-f="metrics"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Metrics</button>
+          <button data-f="list"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Profile List</button>
+          <button data-f="cg"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 7l3 9M16 7l-3 9"/></svg>Call Graph</button>
+        </div>
+
+        <div class="fgtool">
+          <span class="lab">Metric</span>
+          <div id="metricchips">
+            <span class="chip on clk" data-metric="cpu">CPU Time</span>
+            <span class="chip clk" data-metric="wall">Wall Time</span>
+            <span class="chip clk" data-metric="mem">Allocated Memory</span>
+            <span class="chip clk" data-metric="heap">Live Heap</span>
+            <span class="chip clk" data-metric="lock">Lock</span>
+            <span class="chip clk" data-metric="io">Socket I/O</span>
+            <span class="chip clk" data-metric="exc">Exceptions</span>
+          </div>
+        </div>
+
+        <!-- FLAME sub -->
+        <div class="fsub" id="fsub-flame">
+          <div class="fgtool" style="margin-bottom:12px">
+            <span class="lab">Group by</span>
+            <div class="seg"><button class="on">Function</button><button>Line</button><button>File</button><button>Directory</button></div>
+            <span class="lab">Color</span><span class="chip">Self time</span>
+            <button class="btn sm" id="resetzoom" style="margin-left:auto">⤢ Reset zoom</button>
+            <button class="btn sm" data-nav="compare">⇄ Compare to…</button>
+          </div>
+          <div class="workspace">
+            <div>
+              <div class="row between" style="margin-bottom:8px"><span class="small muted" id="flametotal">CPU Time · 3.76s per minute</span><span class="small muted">width = self share · darker = hotter · click to zoom</span></div>
+              <div class="flamewrap"><div class="flame" id="flame"></div></div>
+              <div class="legend" id="flamelegend"></div>
+            </div>
+            <div class="insp">
+              <div class="il">Selected frame</div>
+              <div id="selframe"><b class="hl">WebServer.handle()</b><div class="small muted mono" style="margin-top:4px" id="selmeta">3.76s · 100% of profile</div></div>
+              <div class="il">Endpoints by cost</div>
+              <div id="inspend"></div>
+              <div class="il">Functions by cost</div>
+              <div id="inspfn"></div>
+              <div class="aicard" style="margin-top:14px"><div class="t">✦ AI Insight</div><p id="aitext">Garbage collection is consuming <b>11%</b> of CPU — allocation in <b>serialize()</b> spiked after v1.5.0. Consider object pooling.</p></div>
+            </div>
+          </div>
+          <div style="margin-top:14px"><div class="small muted" style="margin-bottom:6px">Thread timeline (in sync with selection)</div><div class="tl" id="flametl"></div></div>
+        </div>
+
+        <!-- TIMELINE sub -->
+        <div class="fsub" id="fsub-timeline" style="display:none">
+          <div class="tl" id="bigtl"></div>
+          <div class="legend"><span><i class="st-run"></i>Running</span><span><i class="st-sock"></i>Socket read</span><span><i class="st-wait"></i>Monitor wait</span><span><i class="st-safe"></i>Safepoint</span><span><i class="st-gc"></i>GC</span></div>
+        </div>
+
+        <!-- METRICS sub -->
+        <div class="fsub" id="fsub-metrics" style="display:none">
+          <div class="card pad"><div class="row between" style="margin-bottom:10px"><b style="font-size:13px">Total CPU cores · timeseries</b><div class="seg"><button class="on">Timeseries</button><button>Table</button><button>Top list</button></div></div><div class="chartbox" id="metricchart"></div></div>
+        </div>
+
+        <!-- LIST sub -->
+        <div class="fsub" id="fsub-list" style="display:none">
+          <div class="card"><table class="grid"><thead><tr><th>Profiler</th><th>Date</th><th>Service</th><th>CPU cores</th><th>Mem alloc</th><th>Version</th><th>Host</th></tr></thead><tbody id="profilelist"></tbody></table></div>
+        </div>
+
+        <!-- CALLGRAPH sub -->
+        <div class="fsub" id="fsub-cg" style="display:none">
+          <div class="card pad"><div class="cg" id="callgraph"></div><div class="small muted">Each method rendered once; edge label = time between methods.</div></div>
+        </div>
+      </section>
+
+      <!-- ========== DUMPS ========== -->
+      <section class="view" id="v-dumps">
+        <div class="viewhead"><h2>Dumps</h2><p>On-demand deep captures. Thread dumps for hangs/deadlocks, heap dumps for leaks (analysed <b>in-product</b>), crash dumps for JVM kills.</p></div>
+        <div class="tabs" id="dumptabs">
+          <button class="on" data-d="thread">Thread dumps</button>
+          <button data-d="heap">Heap dumps</button>
+          <button data-d="crash">Crash dumps</button>
+        </div>
+
+        <!-- THREAD -->
+        <div class="dsub" id="dsub-thread">
+          <div class="row between" style="margin-bottom:14px"><div class="row gap8"><span class="pill crit">1 deadlock detected</span><span class="pill warn">4 blocked</span><span class="pill ok">18 runnable</span></div><button class="btn primary sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Capture thread dump</button></div>
+          <div class="workspace" style="grid-template-columns:230px 1fr">
+            <div class="card pad"><div class="il" style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted2);font-weight:600;margin-bottom:12px">Thread states</div><div class="donut"><svg id="threaddonut" viewBox="0 0 100 100" width="100" height="100"></svg><div id="threadlegend" style="font-size:11.5px"></div></div></div>
+            <div class="card">
+              <div class="note" style="margin:14px 14px 0"><span class="l" style="color:var(--red)">⚠ Deadlock</span><b>pool-2-thread-7</b> holds <span class="mono">CacheLock</span> waiting for <span class="mono">DbLock</span> · <b>pool-2-thread-3</b> holds <span class="mono">DbLock</span> waiting for <span class="mono">CacheLock</span>.</div>
+              <table class="grid" style="margin-top:8px"><thead><tr><th>Thread</th><th>State</th><th>CPU</th><th>Waiting on</th></tr></thead><tbody id="threadbody"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- HEAP -->
+        <div class="dsub" id="dsub-heap" style="display:none">
+          <div class="row between" style="margin-bottom:14px"><div class="row gap8"><span class="pill info">Heap 4.2 GB</span><span class="pill crit">Leak suspected</span></div><button class="btn primary sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Trigger new dump</button></div>
+          <div class="card">
+            <div class="pad" style="border-bottom:1px solid var(--border)"><div class="tabs" style="margin:0;border:none" id="heaptabs"><button class="on" data-hp="dom">Dominator tree</button><button data-hp="leak">Leak suspects</button><button data-hp="hist">Class histogram</button></div></div>
+            <table class="grid"><thead><tr><th>Class</th><th>Retained heap</th><th>Objects</th><th>% heap</th></tr></thead><tbody id="heapbody"></tbody></table>
+          </div>
+          <div class="note"><span class="l">Leapfrog</span>Rendered <b>inline</b> — dominator tree, leak suspects and histogram, no export to Eclipse MAT. This is the one place Dynatrace punts to external tools.</div>
+        </div>
+
+        <!-- CRASH -->
+        <div class="dsub" id="dsub-crash" style="display:none">
+          <div class="row" style="gap:14px;align-items:stretch">
+            <div class="card" style="flex:0 0 260px"><div class="pad" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Recent crashes</b></div><div id="crashlist"></div></div>
+            <div class="card pad" style="flex:1">
+              <div class="row between" style="margin-bottom:12px"><b style="font-size:14px">store-worker · crash #4821</b><span class="pill crit">SIGSEGV</span></div>
+              <div class="row wrapc gap8" style="margin-bottom:14px"><span class="chip">signal: Segmentation fault (11)</span><span class="chip">Jul 14 · 03:12</span><span class="chip">JVM 17.0.9</span><span class="chip">host: apm-host-3</span></div>
+              <div class="il" style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted2);font-weight:600;margin-bottom:8px">Crashing stack frame</div>
+              <div class="card2" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--muted)">
+                <div style="color:var(--red)">→ 0x00007f  JNI_Compress.deflate() +0x2a</div>
+                <div>&nbsp;&nbsp;&nbsp;com.store.codec.NativeCodec.encode(NativeCodec.java:88)</div>
+                <div>&nbsp;&nbsp;&nbsp;com.store.worker.JobRunner.process(JobRunner.java:212)</div>
+                <div>&nbsp;&nbsp;&nbsp;java.util.concurrent.ThreadPoolExecutor.run()</div>
+              </div>
+              <div class="il" style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted2);font-weight:600;margin:16px 0 8px">Artifacts</div>
+              <div class="row wrapc gap8"><span class="chip clk">⬇ core.4821.dump</span><span class="chip clk">⬇ hs_err_pid.log</span><span class="chip clk">⬇ analysis-report.pdf</span><span class="chip clk info">◎ Linked alert #A-2290</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== COMPARE ========== -->
+      <section class="view" id="v-compare">
+        <div class="viewhead"><h2>Compare · Differential Flame Graph</h2><p>Compare two versions, periods or a baseline. Red = slower, green = faster, purple = baseline-only, blue = new-only. Hover any frame for the delta.</p></div>
+        <div class="row gap8 wrapc" style="margin-bottom:14px;align-items:center">
+          <span class="chip">Baseline (A)</span><span class="chip on">ver 1.4.0</span>
+          <span style="color:var(--muted)">→</span>
+          <span class="chip">Comparison (B)</span><span class="chip on">ver 1.5.0</span>
+          <button class="btn primary sm" style="margin-left:8px">Compare</button>
+        </div>
+        <div class="flamewrap"><div class="flame" id="diffflame"></div></div>
+        <div class="legend" style="margin-top:10px"><span><i style="background:var(--red)"></i>▲ slower in B</span><span><i style="background:var(--green)"></i>▼ faster in B</span><span><i style="background:var(--purple)"></i>baseline-only</span><span><i style="background:var(--blue)"></i>new-only</span></div>
+        <div class="card" style="margin-top:16px">
+          <div class="pad" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Endpoint deltas <span class="muted small">· sorted by % change</span></b></div>
+          <table class="grid"><thead><tr><th>Endpoint</th><th>v1.4 latency</th><th>v1.5 latency</th><th>Δ</th></tr></thead><tbody id="diffbody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- ========== STUB ========== -->
+      <section class="view" id="v-stub">
+        <div class="stub">
+          <div class="ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg></div>
+          <h3 id="stubtitle">Overview</h3>
+          <p>This screen exists in the redesigned APM module but is outside the <b>Profiling &amp; Dumps</b> prototype scope. Jump into the parts that are built:</p>
+          <div class="row gap8" style="justify-content:center;flex-wrap:wrap"><button class="btn primary sm" data-nav="prof-explorer">Profiling Explorer</button><button class="btn sm" data-nav="prof-flame">Flame Graph</button><button class="btn sm" data-nav="dumps">Dumps</button><button class="btn sm" data-nav="settings">Settings</button></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="fgtip" id="tip"></div>
+
+<!-- flow map -->
+<button class="flowbtn" id="flowbtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Flow</button>
+<div class="flowmap" id="flowmap">
+  <h4>Profiling &amp; Dumps — guided flow</h4>
+  <div class="sub">Click a step to jump. Each maps to the spec.</div>
+  <div id="flowsteps"></div>
+</div>
+
+<script>
+/* ---------- seeded PRNG ---------- */
+function rng(seed){let s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
+
+/* ---------- state ---------- */
+const S={view:'prof-explorer',metric:'cpu',splitby:'proc',ct:'line',mtab:'rt',sub:'median'};
+
+/* ---------- data ---------- */
+const PROCS=[
+ {n:'server.js (frontend)',tk:'node',tech:'Node.js',gc:'15.1%',cpu:96,svc:1},
+ {n:'BrokerService.dll',tk:'net',tech:'.NET',gc:'1.09%',cpu:64,svc:2},
+ {n:'ProfileServiceApplication',tk:'java',tech:'Tomcat',gc:'0.94%',cpu:58,svc:3},
+ {n:'server.js (next-frontend)',tk:'node',tech:'Node.js',gc:'5.67%',cpu:52,svc:1},
+ {n:'MembershipService.dll',tk:'net',tech:'.NET',gc:'0.03%',cpu:44,svc:2},
+ {n:'simulation.py travel-demo',tk:'py',tech:'Python',gc:'—',cpu:40,svc:1},
+ {n:'user-auth-service',tk:'node',tech:'Node.js',gc:'2.73%',cpu:34,svc:2},
+ {n:'PHP-CLI unguard-like',tk:'php',tech:'PHP',gc:'—',cpu:28,svc:1},
+ {n:'AccountService',tk:'java',tech:'Tomcat',gc:'2.45%',cpu:22,svc:4},
+ {n:'easyTradeManager.dll',tk:'net',tech:'.NET',gc:'3.02%',cpu:18,svc:2},
+];
+const SVCS=[
+ {n:'store-backend',tk:'rb',tech:'Ruby',gc:'—',cpu:92,svc:3},
+ {n:'store-frontend-api',tk:'node',tech:'Node.js',gc:'—',cpu:70,svc:1},
+ {n:'store-worker',tk:'java',tech:'Java',gc:'2.4%',cpu:48,svc:2},
+ {n:'store-ads',tk:'java',tech:'Java',gc:'0.9%',cpu:30,svc:1},
+ {n:'store-discounts',tk:'net',tech:'.NET',gc:'0.2%',cpu:12,svc:1},
+];
+const CONTRIB=[
+ {n:'HighCpuUsageMiddleware.InvokeAsync',t:'Method',c:70,tp:'47.4/min',cpu:'442 µs'},
+ {n:'Spree::Api::V2::Storefront::Cart',t:'Endpoint',c:52,tp:'31/min',cpu:'318 µs'},
+ {n:'pg.exec (SELECT orders)',t:'DB query',c:44,tp:'88/min',cpu:'210 µs'},
+ {n:'Easytrade.longBuy',t:'Service',c:30,tp:'2.98/min',cpu:'664 µs'},
+ {n:'AuthZ.check (JWT)',t:'Method',c:22,tp:'120/min',cpu:'96 µs'},
+];
+
+/* flame trees: {name, val, cls, children} val=total */
+const F=(name,val,cls,children)=>({name,val,cls,children:children||[]});
+const TREES={
+ cpu:F('WebServer.handle()',376,'web',[
+   F('Rails.dispatch()',250,'rt',[
+     F('AuthZ.check()',96,'app',[F('JWT.verify()',60,'app',[F('crypto.hmac()',38,'oth')]),F('policy.eval()',22,'app')]),
+     F('OrdersController#index',110,'app',[F('ActiveRecord.load()',72,'db',[F('pg.exec SELECT',60,'db')]),F('serialize()',30,'app',[F('json.encode()',22,'oth')])]),
+     F('render()',30,'app'),
+   ]),
+   F('datadog.trace()',34,'oth',[F('flush()',20,'oth')]),
+   F('GC.collect()',42,'gc'),
+   F('middleware.stack()',40,'rt',[F('rack.session()',24,'rt'),F('logger.rb',10,'oth')]),
+ ]),
+ wall:F('WebServer.handle()',920,'web',[
+   F('Rails.dispatch()',300,'rt',[F('OrdersController#index',180,'app',[F('ActiveRecord.load()',150,'db',[F('pg.exec SELECT',140,'db')])])]),
+   F('OkHttp.execute()',420,'io',[F('Socket.read()',380,'io')]),
+   F('GC.collect()',60,'gc'),
+   F('sleep(thread_pool)',120,'oth'),
+ ]),
+ mem:F('CompressingRequestBody.writeTo()',300,'app',[
+   F('attemptWrite(InputStream)',180,'app',[F('toZstdStream()',120,'io',[F('byte[] alloc',90,'gc')]),F('Arrays.copyOf()',48,'gc')]),
+   F('java.util.ArrayList',60,'db'),
+   F('String.intern()',40,'oth'),
+   F('Datadog.buffer()',20,'rt'),
+ ]),
+ heap:F('Live heap',420,'app',[
+   F('byte[]',180,'gc'),F('HashMap$Node',120,'db',[F('CacheEntry',90,'ex')]),F('String',70,'oth'),F('java.util.ArrayList',50,'rt'),
+ ]),
+ lock:F('Thread.run()',158,'rt',[
+   F('synchronized(CacheLock)',90,'ex',[F('waitFor(DbLock)',70,'ex')]),
+   F('ThreadPool.take()',48,'oth'),F('logger.sync()',20,'oth'),
+ ]),
+ io:F('Thread.run()',1469,'rt',[
+   F('ThreadPoolExecutor.run()',900,'rt',[F('TCPTransport.handle()',720,'io',[F('Socket.read(byte[])',600,'io')])]),
+   F('FilterInputStream.read()',320,'io'),F('BufferedInputStream.fill()',180,'io'),F('datadog.socket()',69,'oth'),
+ ]),
+ exc:F('Thrown exceptions',86,'ex',[
+   F('PSQLException',34,'ex',[F('ConnectionReset',20,'ex')]),F('NullPointerException',26,'ex'),F('ConnectException',14,'oth'),F('NumberFormatException',12,'oth'),
+ ]),
+};
+const METRIC_LABEL={cpu:'CPU Time · 3.76s per minute',wall:'Wall Time · 16m 34s per minute',mem:'Allocated Memory · 3 MiB per minute',heap:'Live Heap · 511 MB',lock:'Lock · 158ms per minute',io:'Socket I/O Read · 14.69s per minute',exc:'Exceptions · 86 per minute'};
+
+/* diff tree */
+const DIFF=F('Handler.handle()',100,'oth',[
+  F('query() ▲+38%',50,'slow',[F('pg.connect() ▲+22%',30,'slow')]),
+  F('render() ▼-12%',50,'fast',[F('template.rb ▼-8%',20,'fast')]),
+  F('legacyCache() (removed)',22,'base'),
+  F('newBatcher() (added)',28,'new'),
+]);
+
+const EXEC=[{k:'Code',v:58,c:'#14b8a6'},{k:'Network I/O',v:22,c:'#009ddc'},{k:'Disk I/O',v:9,c:'#f58518'},{k:'Lock',v:7,c:'#8b7cf6'},{k:'Wait',v:4,c:'#f5bc18'}];
+const THREADSTATE=[{k:'Runnable',v:18,c:'#89c540'},{k:'Blocked',v:4,c:'#f25c4e'},{k:'Waiting',v:6,c:'#f5bc18'},{k:'Timed-wait',v:3,c:'#5f7ca8'}];
+const HEAP=[{n:'byte[]',r:88,o:'1.2M',p:'32%',leak:0},{n:'HashMap$Node',r:60,o:'820k',p:'21%',leak:0},{n:'com.store.CacheEntry',r:44,o:'610k',p:'15%',leak:1},{n:'java.lang.String',r:30,o:'540k',p:'10%',leak:0},{n:'ConcurrentHashMap$Segment',r:22,o:'190k',p:'7%',leak:0}];
+const THREADS=[{n:'pool-2-thread-7',s:'BLOCKED',c:'0%',w:'DbLock',crit:1},{n:'pool-2-thread-3',s:'BLOCKED',c:'0%',w:'CacheLock',crit:1},{n:'http-nio-8080-1',s:'RUNNABLE',c:'42%',w:'—'},{n:'http-nio-8080-2',s:'RUNNABLE',c:'38%',w:'—'},{n:'C2 CompilerThread',s:'RUNNABLE',c:'12%',w:'—'},{n:'GC-worker-0',s:'WAITING',c:'4%',w:'—'},{n:'okhttp-dispatcher',s:'TIMED_WAIT',c:'2%',w:'socket'}];
+const CRASHES=[{id:'#4821',svc:'store-worker',sig:'SIGSEGV',t:'Jul 14 03:12',on:1},{id:'#4790',svc:'store-worker',sig:'SIGABRT',t:'Jul 12 21:40'},{id:'#4712',svc:'store-ads',sig:'OOM Killer',t:'Jul 09 11:08'}];
+const DIFFROWS=[{e:'/api/v2/cart',a:'318ms',b:'438ms',d:'+38%',dir:1},{e:'/api/v2/orders',a:'210ms',b:'232ms',d:'+10%',dir:1},{e:'/api/v2/products',a:'145ms',b:'128ms',d:'-12%',dir:0},{e:'/api/v2/checkout',a:'96ms',b:'70ms',d:'-27%',dir:0}];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+
+/* ---------- charts (SVG) ---------- */
+function makeSeries(seed,n,base,amp,spike){const r=rng(seed);const a=[];for(let i=0;i<n;i++){let v=base+Math.sin(i/3)*amp*.3+(r()-.5)*amp;if(spike&&i===Math.floor(n*.62))v+=amp*2.4;a.push(Math.max(2,v));}return a;}
+function drawChart(box,series,type,h){
+  h=h||200;const W=1000,pad=8;box.innerHTML='';
+  const all=series.flatMap(s=>s.data);const max=Math.max(...all)*1.1;
+  const n=series[0].data.length;const cw=(W-pad*2)/(n-1);
+  let svg=`<svg viewBox="0 0 ${W} ${h}" preserveAspectRatio="none" style="height:${h}px">`;
+  // gridlines
+  for(let g=0;g<=4;g++){const y=pad+(h-pad*2)*g/4;svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#18304a" stroke-width="1"/>`;}
+  const X=i=>pad+i*cw, Y=v=>h-pad-(v/max)*(h-pad*2);
+  series.forEach((s,si)=>{
+    if(type==='bar'){
+      const bw=Math.max(2,cw*.5/series.length);
+      s.data.forEach((v,i)=>{svg+=`<rect x="${X(i)-bw/2 + si*bw - (series.length*bw)/2 + bw/2}" y="${Y(v)}" width="${bw}" height="${h-pad-Y(v)}" fill="${s.color}" opacity=".85" rx="1"/>`;});
+    } else {
+      let d='M'+s.data.map((v,i)=>`${X(i)},${Y(v)}`).join(' L');
+      if(type==='area'){svg+=`<path d="${d} L${X(n-1)},${h-pad} L${X(0)},${h-pad} Z" fill="${s.color}" opacity=".14"/>`;}
+      svg+=`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
+    }
+  });
+  svg+='</svg>';box.innerHTML=svg;
+}
+function cpuSeries(){
+  if(S.splitby==='proc') return [
+    {name:'server.js',color:'#8b7cf6',data:makeSeries(11,60,24,10,1)},
+    {name:'BrokerService',color:'#14b8a6',data:makeSeries(22,60,14,7)},
+    {name:'ProfileService',color:'#f58518',data:makeSeries(33,60,10,6)},
+    {name:'MembershipSvc',color:'#009ddc',data:makeSeries(44,60,8,5)},
+  ];
+  return [
+    {name:'store-backend',color:'#14b8a6',data:makeSeries(51,60,30,12)},
+    {name:'store-frontend',color:'#009ddc',data:makeSeries(52,60,20,9)},
+    {name:'store-worker',color:'#f58518',data:makeSeries(53,60,14,7)},
+  ];
+}
+function renderCpuChart(){const s=cpuSeries();drawChart($('#cpuchart'),s,S.ct,210);$('#cpulegend').innerHTML=s.map(x=>`<span><i style="background:${x.color}"></i>${x.name}</span>`).join('');}
+
+/* ---------- donut ---------- */
+function donut(svgId,data,legId){
+  const svg=$(svgId);let tot=data.reduce((a,b)=>a+b.v,0),acc=0,out='';
+  data.forEach(d=>{const frac=d.v/tot,a0=acc*2*Math.PI-Math.PI/2,a1=(acc+frac)*2*Math.PI-Math.PI/2;acc+=frac;
+    const x0=50+38*Math.cos(a0),y0=50+38*Math.sin(a0),x1=50+38*Math.cos(a1),y1=50+38*Math.sin(a1);
+    const large=frac>.5?1:0;
+    out+=`<path d="M${x0} ${y0} A38 38 0 ${large} 1 ${x1} ${y1}" fill="none" stroke="${d.c}" stroke-width="16"/>`;});
+  out+=`<text x="50" y="54" text-anchor="middle" fill="#eaf2fb" font-size="13" font-weight="700">${tot}${data===EXEC?'%':''}</text>`;
+  svg.innerHTML=out;
+  if(legId)$(legId).innerHTML=data.map(d=>`<div style="margin-bottom:5px"><i style="width:9px;height:9px;border-radius:2px;display:inline-block;background:${d.c};margin-right:7px"></i><span style="color:var(--text)">${d.k}</span> <b style="color:var(--head);float:right">${d.v}${data===EXEC?'%':''}</b></div>`).join('');
+}
+
+/* ---------- flame graph ---------- */
+function setParents(n,p){n.parent=p;(n.children||[]).forEach(c=>setParents(c,n));}
+Object.values(TREES).forEach(t=>setParents(t,null));setParents(DIFF,null);
+const CLSNAME={web:'WebServer',rt:'Runtime',app:'Application',db:'Database',io:'I/O',gc:'GC',oth:'Other',ex:'Exception'};
+function fmt(metric,v){if(metric==='mem'||metric==='heap')return v+' MiB';if(metric==='exc')return v+'×';return (v>=100?(v/100).toFixed(2)+'s':v+'ms');}
+let curFlame={el:null,root:null,focus:null,metric:'cpu',diff:false};
+function renderFlame(elId,root,focus,metric,diff){
+  const wrap=$(elId);curFlame={elId,root,focus:focus||root,metric,diff};
+  focus=focus||root;const rowH=21;
+  const path=[];for(let n=focus;n;n=n.parent)path.unshift(n);
+  const k=path.length-1;let html='';
+  // ancestors
+  for(let i=0;i<k;i++){const a=path[i];html+=frameHTML(a,0,100,i,diff,true);}
+  // subtree layout
+  const out=[];layout(focus,0,100,k,out);
+  let maxd=k;out.forEach(f=>{maxd=Math.max(maxd,f.d);html+=frameHTML(f.node,f.x,f.w,f.d,diff,false);});
+  wrap.style.height=((maxd+1)*rowH+2)+'px';
+  wrap.innerHTML=html;
+  // events
+  $$('#'+wrap.id+' .frame').forEach(fr=>{
+    fr.addEventListener('mousemove',e=>showTip(e,fr));
+    fr.addEventListener('mouseleave',()=>{$('#tip').style.display='none';});
+    fr.addEventListener('click',()=>{const idx=+fr.dataset.idx;const node=idx>=0?flatNodes[idx]:root;renderFlame(elId,root,node,metric,diff);if(!diff)selectFrame(node);});
+  });
+}
+let flatNodes=[];
+function layout(node,x,w,d,out){
+  out.push({node,x,w,d});const total=node.val;let cx=x;
+  (node.children||[]).forEach(c=>{const cw=w*(c.val/total);layout(c,cx,cw,d+1,out);cx+=cw;});
+}
+function frameHTML(node,x,w,d,diff,anc){
+  flatNodes.push(node);const idx=flatNodes.length-1;const rowH=21;
+  let cls='fc-oth';
+  if(diff){cls={slow:'',fast:'',base:'',new:''}[node.cls]!=null?'':'fc-oth';
+    const map={slow:'var(--red)',fast:'var(--green)',base:'var(--purple)',new:'var(--blue)'};
+    const col=map[node.cls]||'#33547a';
+    return `<div class="frame" data-idx="${idx}" style="left:${x}%;width:${w}%;top:${d*rowH}px;background:${col};color:${node.cls==='fast'||node.cls==='new'?'#04121f':'#fff'}">${w>6?esc(node.name):''}</div>`;
+  }
+  cls='fc-'+(node.cls||'oth');
+  return `<div class="frame ${cls}" data-idx="${idx}" style="left:${x}%;width:${w}%;top:${d*rowH}px">${w>5?esc(node.name):''}</div>`;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function showTip(e,fr){const idx=+fr.dataset.idx;const n=flatNodes[idx];if(!n)return;const t=$('#tip');
+  const root=curFlame.root;const pct=(n.val/root.val*100).toFixed(1);
+  let body;
+  if(curFlame.diff){body=`<div style="margin-top:4px"><span class="k">${pct}% of frame · click to zoom</span></div>`;}
+  else{body=`<div><span class="k">${CLSNAME[n.cls]||''}</span></div><div style="margin-top:4px"><span class="k">value </span><span class="v">${fmt(curFlame.metric,n.val)}</span> <span class="k">· ${pct}% of profile</span></div>`;}
+  t.innerHTML=`<b>${esc(n.name)}</b>${body}`;
+  t.style.display='block';t.style.left=Math.min(e.clientX+14,innerWidth-290)+'px';t.style.top=(e.clientY+14)+'px';}
+function selectFrame(n){$('#selframe').innerHTML=`<b class="hl">${esc(n.name)}</b><div class="small muted mono" style="margin-top:4px">${fmt(curFlame.metric,n.val)} · ${(n.val/curFlame.root.val*100).toFixed(1)}% of profile · ${CLSNAME[n.cls]||''}</div>`;}
+
+/* endpoints/functions inspector */
+const ENDPTS=[['Spree::Api::V2::Storefront::Cart',530],['Spree::Api::V2::Storefront::Products',324],['Spree::Api::V2::Storefront::Cart#add',255],['Spree::Api::V2::Checkout',187],['Other activity',126]];
+const FNS=[['datadog',113],['pg.exec',47],['activesupport',22],['activerecord',22],['sleep(thread_pool)',17],['GC.collect',11]];
+function inspectorLists(){
+  const mx=530;
+  $('#inspend').innerHTML=ENDPTS.map(([n,v])=>`<div class="crow"><span class="nm" title="${n}">${n}</span><span class="mbar"><span style="width:${v/mx*100}%"></span></span><span class="mono">${v}ms</span></div>`).join('');
+  const mxf=113;
+  $('#inspfn').innerHTML=FNS.map(([n,v])=>`<div class="crow"><span class="nm">${n}</span><span class="mbar b"><span style="width:${v/mxf*100}%"></span></span><span class="mono">${v>=100?(v/100).toFixed(2)+'s':v+'ms'}</span></div>`).join('');
+}
+
+/* ---------- thread timeline ---------- */
+function renderTL(elId,rows,seed){const box=$(elId);const r=rng(seed);let html='';
+  rows.forEach(row=>{let segs='',x=0;while(x<100){const w=3+r()*14;const states=row.states;const st=states[Math.floor(r()*states.length)];segs+=`<span class="st-${st}" style="left:${x}%;width:${Math.min(w,100-x)}%"></span>`;x+=w+r()*3;}
+    html+=`<div class="tlrow"><span class="thn">${row.n}</span><span class="tllane">${segs}</span></div>`;});
+  box.innerHTML=html;
+}
+const TLROWS=[{n:'http-nio-8080-1',states:['run','run','sock','safe']},{n:'http-nio-8080-2',states:['run','sock','run']},{n:'GC-worker-0',states:['gc','safe','gc']},{n:'okhttp-dispatch',states:['sock','wait','sock']},{n:'C2 Compiler',states:['run','run','safe']},{n:'pool-2-thread-3',states:['wait','wait','run']}];
+
+/* ---------- render views ---------- */
+function renderReg(){
+  const apps=[{n:'store-backend',tk:'java',l:'Java',ins:1,pr:1,du:1,sr:'100 Hz',ret:'8d'},
+    {n:'store-frontend-api',tk:'node',l:'Node.js',ins:1,pr:0,du:0,sr:'—',ret:'—'},
+    {n:'store-worker',tk:'java',l:'Java',ins:1,pr:1,du:0,sr:'100 Hz',ret:'8d'},
+    {n:'store-ads',tk:'java',l:'Java',ins:0,pr:0,du:0,sr:'—',ret:'—'},
+    {n:'store-discounts',tk:'net',l:'.NET',ins:1,pr:0,du:0,sr:'—',ret:'—'}];
+  $('#regbody').innerHTML=apps.map((a,i)=>`<tr>
+    <td><span class="svcname"><span class="tk ${a.tk}">${a.l[0]}</span><b>${a.n}</b></span></td>
+    <td>${a.l}</td>
+    <td><span class="tg ${a.ins?'':'off'}" data-tg="ins" data-i="${i}"></span></td>
+    <td><span class="tg ${a.pr?'':'off'}" data-tg="pr" data-i="${i}"></span></td>
+    <td><span class="tg ${a.du?'':'off'}" data-tg="du" data-i="${i}"></span></td>
+    <td class="mono">${a.sr}</td><td class="mono">${a.ret}</td></tr>`).join('');
+  $$('#regbody .tg').forEach(t=>t.addEventListener('click',()=>t.classList.toggle('off')));
+}
+function renderProcGrid(){
+  const list=S.splitby==='proc'?PROCS:SVCS;
+  $('#gridtitle').textContent=(S.splitby==='proc'?'12 processes':'5 services');
+  const mx=Math.max(...list.map(p=>p.cpu));
+  $('#procbody').innerHTML=list.map(p=>`<tr class="clk" data-proc="${p.n}">
+    <td><span class="svcname"><span class="tk ${p.tk}">${p.tech[0]}</span><b>${p.n}</b></span></td>
+    <td>${p.tech}</td><td class="mono">${p.gc}</td>
+    <td><div class="row" style="align-items:center;gap:8px"><span class="mbar" style="flex:1;max-width:150px"><span style="width:${p.cpu/mx*100}%"></span></span><span class="mono small">${(p.cpu/12).toFixed(1)} min</span></div></td>
+    <td class="mono muted">⌕ ⋯</td></tr>`).join('');
+  $$('#procbody tr').forEach(tr=>tr.addEventListener('click',()=>{$('#detailtitle').textContent=(S.splitby==='proc'?'store-backend · ':'')+tr.dataset.proc;nav('prof-detail');}));
+}
+function renderContrib(){
+  const mx=70;
+  $('#contribbody').innerHTML=CONTRIB.map(c=>`<tr class="clk">
+    <td><b>${c.n}</b></td><td><span class="pill ${c.t==='DB query'?'info':c.t==='Endpoint'?'warn':'ok'}" style="font-size:9.5px">${c.t}</span></td>
+    <td><span class="mbar" style="max-width:120px"><span style="width:${c.c/mx*100}%"></span></span></td>
+    <td class="mono">${c.tp}</td><td class="mono">${c.cpu}</td><td class="mono muted">▸</td></tr>`).join('');
+  $$('#contribbody tr').forEach(tr=>tr.addEventListener('click',()=>nav('prof-flame')));
+}
+const SUBVIEWS={rt:['Median','Slowest 10%','Slowest 5%'],fr:['Failure rate','HTTP errors'],cpu:['CPU per request','CPU total'],tp:['Requests']};
+const MNAMES={rt:'Median response time',fr:'Failure rate',cpu:'CPU per request',tp:'Requests/min'};
+function renderDetail(){
+  const sv=SUBVIEWS[S.mtab];
+  $('#subview').innerHTML=sv.map((s,i)=>`<button class="${i===0?'on':''}" data-sv="${s}">${s}</button>`).join('');
+  $('#metricname').textContent=MNAMES[S.mtab];
+  const cfg={rt:{c:'#009ddc',base:50,amp:26},fr:{c:'#f25c4e',base:18,amp:10},cpu:{c:'#8b7cf6',base:30,amp:14},tp:{c:'#14b8a6',base:60,amp:20}}[S.mtab];
+  drawChart($('#detailchart'),[{name:'v',color:cfg.c,data:makeSeries(70+S.mtab.length,60,cfg.base,cfg.amp,1)}],S.mtab==='fr'?'bar':'area',200);
+  $$('#subview button').forEach(b=>b.addEventListener('click',()=>{$$('#subview button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+}
+function renderHotspots(){
+  donut('#execdonut',EXEC,'#execlegend');
+  const rows=[['puma > handle_request','88ms','web',0],['&nbsp;&nbsp;Rails.dispatch','72ms','rt',0],['&nbsp;&nbsp;&nbsp;&nbsp;OrdersController#index','58ms','app',1],['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ActiveRecord.load','44ms','db',1],['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pg.exec SELECT','40ms','db',1],['&nbsp;&nbsp;AuthZ.check','22ms','app',0],['&nbsp;&nbsp;GC.collect','11ms','gc',0]];
+  $('#hstree').innerHTML=rows.map(([n,v,c,hot])=>`<div class="crow" style="padding:4px 0;border-bottom:1px solid var(--border)"><span class="nm mono" style="font-size:11.5px;color:${hot?'var(--red)':'var(--text)'}">${n}</span><span class="mbar" style="flex:0 0 90px"><span style="width:${parseInt(v)/88*100}%;background:${hot?'var(--red)':'var(--teal)'}"></span></span><span class="mono">${v}</span></div>`).join('');
+  $$('#execlegend').forEach&&0;
+}
+function renderFlameWorkspace(){
+  flatNodes=[];renderFlame('#flame',TREES[S.metric],null,S.metric,false);
+  $('#flametotal').textContent=METRIC_LABEL[S.metric];
+  selectFrame(TREES[S.metric]);
+  inspectorLists();
+  $('#flamelegend').innerHTML=['web','rt','app','db','io','gc'].map(c=>`<span><i class="fc-${c}" style="border-radius:3px"></i>${CLSNAME[c]}</span>`).join('');
+  renderTL('#flametl',TLROWS.slice(0,4),90);
+}
+function renderBigTL(){renderTL('#bigtl',TLROWS.concat([{n:'statsd-agg',states:['run','wait','run']},{n:'JVM-safepoint',states:['safe','run','safe']}]),77);}
+function renderMetricChart(){drawChart($('#metricchart'),[{name:'CPU cores',color:'#14b8a6',data:makeSeries(99,60,15,4)}],'area',220);}
+function renderProfileList(){
+  const r=rng(7);let rows='';
+  for(let i=0;i<10;i++){const min=17-Math.floor(i/2);rows+=`<tr class="clk"><td><span class="tk rb" style="width:14px;height:14px">R</span></td><td class="mono">Jul 07 15:${min}:38</td><td><b>store-backend</b></td><td class="mono">${(r()*0.2).toFixed(2)}</td><td class="mono">${(2+r()*2).toFixed(0)} MiB</td><td class="mono">1.5.0</td><td class="mono muted">apm-host-1</td></tr>`;}
+  $('#profilelist').innerHTML=rows;
+  $$('#profilelist tr').forEach(tr=>tr.addEventListener('click',()=>{setFlameTab('flame');}));
+}
+function renderCallGraph(){
+  const nodes=[['puma.handle',376,'web',0],['Rails.dispatch',250,'rt',1],['OrdersController#index',110,'app',2],['ActiveRecord.load',72,'db',3],['pg.exec',60,'db',4],['AuthZ.check',96,'app',2],['GC.collect',42,'gc',1]];
+  $('#callgraph').innerHTML=nodes.map(([n,v,c,d])=>`<div style="margin-left:${d*26}px" >${d?'<span class="cgconn">└▸</span> ':''}<span class="cgn"><span class="tk" style="background:var(--${c==='web'?'teal':c==='rt'?'blue':c==='db'?'green':c==='gc'?'yellow':'purple'});width:9px;height:9px;border-radius:50%"></span>${n}<span class="self">self ${(v/100).toFixed(2)}s</span></span></div>`).join('');
+}
+function renderHeap(){
+  $('#heapbody').innerHTML=HEAP.map(h=>`<tr><td><b>${h.n}</b> ${h.leak?'<span class="pill crit" style="font-size:9px">leak?</span>':''}</td><td><span class="mbar r" style="max-width:180px"><span style="width:${h.r}%"></span></span></td><td class="mono">${h.o}</td><td class="mono">${h.p}</td></tr>`).join('');
+}
+function renderThreads(){
+  donut('#threaddonut',THREADSTATE,'#threadlegend');
+  $('#threadbody').innerHTML=THREADS.map(t=>`<tr><td class="mono"><b style="color:${t.crit?'var(--red)':'var(--head)'}">${t.n}</b></td><td><span class="pill ${t.s==='BLOCKED'?'crit':t.s==='RUNNABLE'?'ok':'warn'}" style="font-size:9px">${t.s}</span></td><td class="mono">${t.c}</td><td class="mono">${t.w}</td></tr>`).join('');
+}
+function renderCrash(){
+  $('#crashlist').innerHTML=CRASHES.map(c=>`<div class="tn" style="padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;${c.on?'background:var(--card2)':''}"><div style="display:flex;justify-content:space-between"><b class="hl mono">${c.id}</b><span class="pill crit" style="font-size:9px">${c.sig}</span></div><div class="small muted" style="margin-top:3px">${c.svc} · ${c.t}</div></div>`).join('');
+}
+function renderDiff(){flatNodes=[];renderFlame('#diffflame',DIFF,null,'cpu',true);
+  $('#diffbody').innerHTML=DIFFROWS.map(r=>`<tr><td><b>${r.e}</b></td><td class="mono">${r.a}</td><td class="mono">${r.b}</td><td class="mono" style="color:${r.dir?'var(--red)':'var(--green)'};font-weight:600">${r.d}</td></tr>`).join('');
+}
+
+/* ---------- tabs wiring ---------- */
+function setFlameTab(f){S.f=f;$$('#flametabs button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+  ['flame','timeline','metrics','list','cg'].forEach(x=>$('#fsub-'+x).style.display=x===f?'block':'none');
+  if(f==='flame')renderFlameWorkspace();if(f==='timeline')renderBigTL();if(f==='metrics')renderMetricChart();if(f==='list')renderProfileList();if(f==='cg')renderCallGraph();}
+
+/* ---------- nav ---------- */
+const CRUMBS={
+ 'settings':['APM','Settings','Application Registration'],
+ 'prof-explorer':['APM','Profiling','Explorer'],
+ 'prof-detail':['APM','Profiling','store-backend','process: web'],
+ 'prof-hotspots':['APM','Profiling','store-backend','Method Hotspots'],
+ 'prof-flame':['APM','Profiling','store-backend','Flame Graph'],
+ 'dumps':['APM','Dumps'],
+ 'compare':['APM','Profiling','Compare'],
+ 'stub':['APM']
+};
+const PILLARMAP={'prof-explorer':'prof-explorer','prof-detail':'prof-explorer','prof-hotspots':'prof-explorer','prof-flame':'prof-explorer','dumps':'dumps','compare':'compare','settings':'settings','stub':'stub'};
+function setCrumb(v){const c=CRUMBS[v]||['APM'];$('#crumb').innerHTML=c.map((x,i)=>`<span class="c ${i===c.length-1?'cur':''}" ${i<c.length-1?'data-cr="'+i+'"':''}>${x}</span>`+(i<c.length-1?'<span class="sep">›</span>':'')).join('');}
+function nav(v,title){
+  S.view=v;$$('.view').forEach(s=>s.classList.remove('active'));$('#v-'+v).classList.add('active');
+  setCrumb(v);
+  // pillar active state
+  const pm=PILLARMAP[v];$$('.plist .pi').forEach(p=>p.classList.toggle('on',p.dataset.nav===pm||(pm==='prof-explorer'&&p.dataset.nav==='prof-explorer')));
+  if(title){$('#stubtitle').textContent=title;}
+  // render on demand
+  if(v==='settings')renderReg();
+  if(v==='prof-explorer'){renderCpuChart();renderProcGrid();}
+  if(v==='prof-detail'){renderDetail();renderContrib();}
+  if(v==='prof-hotspots')renderHotspots();
+  if(v==='prof-flame')setFlameTab('flame');
+  if(v==='dumps')setDumpTab('thread');
+  if(v==='compare')renderDiff();
+  $('#content').scrollTop=0;
+  updateFlow();
+}
+function setDumpTab(d){$$('#dumptabs button').forEach(b=>b.classList.toggle('on',b.dataset.d===d));
+  ['thread','heap','crash'].forEach(x=>$('#dsub-'+x).style.display=x===d?'block':'none');
+  if(d==='thread')renderThreads();if(d==='heap')renderHeap();if(d==='crash')renderCrash();}
+
+/* ---------- flow map ---------- */
+const FLOW=[
+ {v:'settings',t:'1 · Enable',d:'Registration toggle on'},
+ {v:'prof-explorer',t:'2 · Explorer',d:'Continuous profile grid'},
+ {v:'prof-detail',t:'3 · Drill down',d:'Process → service metrics'},
+ {v:'prof-hotspots',t:'4 · Method hotspots',d:'CPU by method'},
+ {v:'prof-flame',t:'5 · Flame graph',d:'CPU · Memory · I/O'},
+ {v:'dumps',t:'6 · Dumps',d:'Thread · Heap · Crash'},
+ {v:'compare',t:'7 · Compare',d:'Differential flame graph'},
+];
+function renderFlow(){$('#flowsteps').innerHTML=FLOW.map((f,i)=>`<div class="fstep" data-v="${f.v}"><div class="n">${i+1}</div><div><div class="ft">${f.t.split('· ')[1]}</div><div class="fd">${f.d}</div></div></div>`).join('');
+  $$('#flowsteps .fstep').forEach(s=>s.addEventListener('click',()=>{nav(s.dataset.v);$('#flowmap').classList.remove('open');}));}
+function updateFlow(){const order=FLOW.map(f=>f.v);const cur=PILLARMAP[S.view]==='prof-explorer'?S.view:S.view;
+  const idx=order.indexOf(cur);
+  $$('#flowsteps .fstep').forEach((s,i)=>{s.classList.toggle('on',s.dataset.v===cur);s.classList.toggle('done',idx>=0&&i<idx);});}
+
+/* ---------- events ---------- */
+$$('[data-nav]').forEach(e=>e.addEventListener('click',()=>nav(e.dataset.nav,e.dataset.title)));
+$$('.plist .pi[data-nav]').forEach(e=>{}); // handled above
+$('#crumb').addEventListener('click',e=>{const c=e.target.closest('[data-cr]');if(!c)return;const v=S.view;
+  // clicking a crumb navigates up sensibly
+  if(['prof-detail','prof-hotspots','prof-flame','compare'].includes(v)){const i=+c.dataset.cr;if(i<=1)nav('prof-explorer');}
+});
+$('#splitby').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.splitby=b.dataset.split;$$('#splitby button').forEach(x=>x.classList.toggle('on',x===b));renderCpuChart();renderProcGrid();});
+$('#charttype').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.ct=b.dataset.ct;$$('#charttype button').forEach(x=>x.classList.toggle('on',x===b));renderCpuChart();});
+$('#metrictabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.mtab=b.dataset.m;$$('#metrictabs button').forEach(x=>x.classList.toggle('on',x===b));renderDetail();});
+$('#hstabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#hstabs button').forEach(x=>x.classList.toggle('on',x===b));$('#hstitle').textContent={api:'Top APIs — CPU by API grouping',exec:'Call hierarchy (forward) + Hotspots (reverse)',call:'Call hierarchy (forward)',hot:'Hotspots (reverse stacks)'}[b.dataset.h];});
+$('#flametabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setFlameTab(b.dataset.f);});
+$('#metricchips').addEventListener('click',e=>{const c=e.target.closest('[data-metric]');if(!c)return;S.metric=c.dataset.metric;$$('#metricchips .chip').forEach(x=>x.classList.toggle('on',x===c));renderFlameWorkspace();});
+$('#resetzoom').addEventListener('click',()=>renderFlameWorkspace());
+$('#dumptabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setDumpTab(b.dataset.d);});
+$('#heaptabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#heaptabs button').forEach(x=>x.classList.toggle('on',x===b));renderHeap();});
+$('#execlegend').addEventListener('click',()=>{});
+$('#flowbtn').addEventListener('click',()=>$('#flowmap').classList.toggle('open'));
+
+/* init */
+renderFlow();nav('prof-explorer');
+</script>
+<!-- ▸ deliverable switcher — connects the 3 APM Profiling & Dumps files -->
+<style>
+#deliv-switch{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147483000;display:flex;align-items:center;gap:3px;background:rgba(9,20,36,.94);border:1px solid #24374f;border-radius:100px;padding:4px 6px;box-shadow:0 10px 34px rgba(0,0,0,.55);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#deliv-switch .ds-lbl{color:#5f7ca8;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:0 8px}
+#deliv-switch a{display:flex;align-items:center;gap:6px;text-decoration:none;color:#8ea3c4;padding:6px 13px;border-radius:100px;font-weight:500;white-space:nowrap;line-height:1;border:0}
+#deliv-switch a:hover{color:#eaf2fb;background:#14233b;text-decoration:none}
+#deliv-switch a.ds-on{background:#14b8a6;color:#04121a;font-weight:700}
+#deliv-switch a.ds-on:hover{background:#22c9b6;color:#04121a}
+#deliv-switch a .n{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.6}
+#deliv-switch a.ds-on .n{opacity:.9}
+#deliv-switch .ds-div{width:1px;height:18px;background:#24374f;margin:0 4px}
+#deliv-switch a.ds-note{color:#cbb45f}
+#deliv-switch a.ds-note svg{width:12px;height:12px;flex-shrink:0}
+#deliv-switch a.ds-note:hover{color:#f0d780;background:#221d0e}
+#deliv-switch a.ds-note.ds-on{background:#e8b407;color:#04121a;font-weight:700}
+#deliv-switch a.ds-note.ds-on:hover{background:#f2c937;color:#04121a}
+@media(max-width:680px){#deliv-switch .ds-full,#deliv-switch .ds-lbl{display:none}}
+</style>
+<div id="deliv-switch" role="navigation" aria-label="APM Profiling deliverables">
+  <span class="ds-lbl">APM · Profiling &amp; Dumps</span>
+  <a href="index.html"><span class="n">1</span><span class="ds-full">In&#8209;product</span></a>
+  <a class="ds-on" href="apm-profiling-dumps-prototype.html"><span class="n">2</span><span class="ds-full">Prototype</span></a>
+  <span class="ds-div"></span>
+  <a class="ds-note" href="apm-profiling-dumps-redesign.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v14a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg><span class="ds-full">Notes</span></a>
+</div>
+</body>
+</html>
