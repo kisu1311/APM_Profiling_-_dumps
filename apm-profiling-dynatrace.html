@@ -696,6 +696,8 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
 .sig-lock .hd{display:flex;align-items:center;gap:8px;font-weight:700;color:#ffca8a;font-size:13px;margin-bottom:6px}
 .col-no{color:#f0a35a !important}
 .dd-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:10.5px;color:var(--muted)}
+#pfHeadTitle .hd-sep{color:var(--muted);margin:0 6px;font-weight:400}
+#pfHeadTitle .hd-ctx{color:var(--text);font-weight:500}
 </style>
 </head>
 <body>
@@ -848,7 +850,7 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
     <section class="view" id="view-profiling">
       <div class="pagehead">
         <svg class="ic" id="pfHeadIc" viewBox="0 0 48 48"></svg>
-        <span class="ttl">APM</span>
+        <span class="ttl" id="pfHeadTitle">APM</span>
         <span class="verbadge" style="margin-left:auto">7d · Last 7 Days &nbsp;·&nbsp; Thu, Jul 10 – Jul 16, 2026</span>
       </div>
       <div class="tabs" id="pfApmTabs">
@@ -2928,7 +2930,11 @@ function renderContrib(){renderCtab('req');chart($('#pfAvChart'),[{name:'av',col
 function renderCtab(key){const t=CTAB[key];let head='<thead><tr>'+t.cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead>';let body='<tbody>'+t.rows.map(r=>{let cells='<td><b style="color:#4c9bff">'+r[0]+'</b></td>';if(key==='cm'){cells+='<td class="pf-mono">'+r[1]+'</td><td class="pf-mono">'+r[2]+'</td>';}else{cells+='<td><span class="pf-bar" style="display:inline-block;width:130px;vertical-align:middle"><span style="width:'+r[1]+'%"></span></span></td><td class="pf-mono">'+r[2]+'</td><td class="pf-mono">'+r[3]+'</td>';}cells+='<td class="pf-mono pf-muted">⤢ ▾ ⋯</td>';return '<tr class="clk">'+cells+'</tr>';}).join('')+'</tbody>';$('#pfCtabBody').innerHTML=head+body;}
 
 /* ---- nav ---- */
-function go(pv){ST.pv=pv;$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));const el=$('#pfv-'+pv);if(el)el.classList.add('on');if(pv==='list')renderList();if(pv==='detail')renderDetail();if(pv==='method')renderMethod();if(pv==='contrib')renderContrib();const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
+function go(pv){ST.pv=pv;$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));const el=$('#pfv-'+pv);if(el)el.classList.add('on');if(pv==='list')renderList();if(pv==='detail')renderDetail();if(pv==='method')renderMethod();if(pv==='contrib')renderContrib();setHead();const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
+/* dynamic breadcrumb title in the APM header — shows where you are on every screen */
+const TABNAME={services:'Services',explorer:'Explorer',errors:'Error Tracker',compare:'Compare',profiling:'Profiling'};
+const SCRNAME={list:'',detail:'Process details',method:'Method hotspots',contrib:'Top contributors'};
+function setHead(){const el=$('#pfHeadTitle');if(!el)return;const parts=['APM'];if(ST.apm!=='profiling'){parts.push(TABNAME[ST.apm]||'');}else{parts.push('Profiling');const svc=($('#pfDetailName')&&$('#pfDetailName').textContent||'').trim();if(ST.pv!=='list'&&svc)parts.push(svc);const scr=SCRNAME[ST.pv];if(scr)parts.push(scr);}el.innerHTML=parts.filter(Boolean).map((p,i)=>i?'<span class="hd-sep">▸</span><span class="hd-ctx">'+p+'</span>':p).join('');}
 
 const STUBMSG={
  services:'This mirrors the live APM ▸ Services tab (build 8.2.6): a card grid of Response Time / Throughput / Error Count per service. The Profiling tab adds continuous CPU profiling on top of it.',
@@ -2936,7 +2942,7 @@ const STUBMSG={
  errors:'Error Tracker — live exception / 4xx / 5xx trends. Feeds the Failure-rate signal in Profiling.',
  compare:'Compare — live two-service side-by-side. Profiling adds a differential / analysis view on top.'
 };
-function setApm(tab){ST.apm=tab;$$('#pfApmTabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.apm===tab));if(tab==='profiling'){$('#pfv-stub').classList.remove('on');go(ST.pv);}else{$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));$('#pfv-stub').classList.add('on');$('#pfStubMsg').innerHTML=STUBMSG[tab]||'';}}
+function setApm(tab){ST.apm=tab;$$('#pfApmTabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.apm===tab));if(tab==='profiling'){$('#pfv-stub').classList.remove('on');go(ST.pv);}else{$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));$('#pfv-stub').classList.add('on');$('#pfStubMsg').innerHTML=STUBMSG[tab]||'';setHead();}}
 
 /* ---- init (idempotent) ---- */
 let wired=false;
