@@ -310,7 +310,7 @@ button{font-family:inherit;cursor:pointer}
 
       <!-- ========== PROCESS DETAIL ========== -->
       <section class="view" id="v-prof-detail">
-        <div class="viewhead"><h2 id="detailtitle">store-backend · process: web</h2><p>Split by process or service; four metric tabs; then jump to code-level analysis. <span class="muted">1 service ▸ contributors only · N services ▸ + top services.</span></p></div>
+        <div class="viewhead"><h2 id="detailtitle">store-backend · process: web</h2><p>Four metric tabs, then the <b>child processes &amp; attached services</b>, the <b>services this process serves</b>, and the top code-level <b>contributors</b>. <span class="muted">1 service ▸ contributors only · N services ▸ + top services.</span></p></div>
         <div class="tabs" id="metrictabs">
           <button class="on" data-m="rt">Response time</button>
           <button data-m="fr">Failure rate</button>
@@ -331,7 +331,16 @@ button{font-family:inherit;cursor:pointer}
           </div>
         </div>
         <div class="card">
-          <div class="pad between row" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Top contributors <span class="muted small">· attached services + child processes</span></b><span class="chip">▾ Contribution</span></div>
+          <div class="pad between row" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Child processes &amp; attached services <span class="muted small" id="procsvcsub">· running store-backend</span></b><span class="chip">▾ CPU · Cores</span></div>
+          <table class="grid"><thead><tr><th>Process · PID</th><th>Attached service</th><th>Technology</th><th>Host · Container</th><th>CPU · Cores</th><th>Throughput</th></tr></thead><tbody id="procsvcbody"></tbody></table>
+          <div class="note"><span class="l">How to read</span>Each row is a <b>child process</b> of this service and the <b>service it's attached to</b> — a process can serve more than one. Click a process to open its <b>flame graph</b>.</div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="pad between row" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Top services <span class="muted small">· this process serves 2 services</span></b><span class="chip">▾ Total time</span></div>
+          <table class="grid"><thead><tr><th>Service</th><th>Total time consumption</th><th>Median response time</th><th>Requests</th></tr></thead><tbody id="topsvcbody"></tbody></table>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="pad between row" style="border-bottom:1px solid var(--border)"><b style="font-size:13px">Top contributors <span class="muted small">· methods, endpoints &amp; queries</span></b><span class="chip">▾ Contribution</span></div>
           <table class="grid"><thead><tr><th>Name</th><th>Type</th><th>Contribution</th><th>Throughput</th><th>CPU</th><th></th></tr></thead><tbody id="contribbody"></tbody></table>
         </div>
       </section>
@@ -554,12 +563,24 @@ const SVCS=[
  {n:'store-ads',tk:'java',tech:'Java',gc:'0.9%',cpu:30,svc:1},
  {n:'store-discounts',tk:'net',tech:'.NET',gc:'0.2%',cpu:12,svc:1},
 ];
+/* top method/endpoint contributors (code-level) */
 const CONTRIB=[
- {n:'HighCpuUsageMiddleware.InvokeAsync',t:'Method',c:70,tp:'47.4/min',cpu:'442 µs'},
- {n:'Spree::Api::V2::Storefront::Cart',t:'Endpoint',c:52,tp:'31/min',cpu:'318 µs'},
- {n:'pg.exec (SELECT orders)',t:'DB query',c:44,tp:'88/min',cpu:'210 µs'},
- {n:'Easytrade.longBuy',t:'Service',c:30,tp:'2.98/min',cpu:'664 µs'},
- {n:'AuthZ.check (JWT)',t:'Method',c:22,tp:'120/min',cpu:'96 µs'},
+ {n:'HighCpuUsageMiddleware.InvokeAsync',t:'Method',c:70,tp:'47.4 /min',cpu:'442 µs'},
+ {n:'Spree::Api::V2::Storefront::Cart',t:'Endpoint',c:52,tp:'31 /min',cpu:'318 µs'},
+ {n:'pg.exec (SELECT orders)',t:'DB query',c:44,tp:'88 /min',cpu:'210 µs'},
+ {n:'ActiveRecord::Base.load',t:'Method',c:34,tp:'120 /min',cpu:'150 µs'},
+ {n:'AuthZ.check (JWT)',t:'Method',c:22,tp:'120 /min',cpu:'96 µs'},
+];
+/* child processes running this service + the service each is attached to */
+const CHILDPROCS=[
+ {proc:'puma 5.6 (web)',pid:'pid 812',svc:'store-backend',tk:'rb',tech:'Ruby',host:'apm-host-1 · c/7ad0…59',cores:2.9,tp:'88 /min'},
+ {proc:'puma 5.6 (web)',pid:'pid 813',svc:'store-backend',tk:'rb',tech:'Ruby',host:'apm-host-2 · c/7ad0…60',cores:2.1,tp:'64 /min'},
+ {proc:'sidekiq 6.5 (worker)',pid:'pid 940',svc:'store-backend-jobs',tk:'rb',tech:'Ruby',host:'apm-host-1 · c/7ad0…01',cores:1.2,tp:'15 /min'},
+];
+/* top services this process serves (the "N services" case) */
+const TOPSVC=[
+ {svc:'store-backend',ttc:'12 min 20 s',mrt:'318 ms',req:'88 /min',pct:100},
+ {svc:'store-backend-jobs',ttc:'5 min 52 s',mrt:'1.9 s',req:'15 /min',pct:46},
 ];
 
 /* flame trees: {name, val, cls, children} val=total */
@@ -769,10 +790,27 @@ function renderProcGrid(){
   $$('#procbody tr').forEach(tr=>tr.addEventListener('click',()=>{$('#detailtitle').textContent=(S.splitby==='proc'?'store-backend · ':'')+tr.dataset.proc;nav('prof-detail');}));
 }
 function renderContrib(){
+  /* child processes + attached services */
+  const mxc=Math.max(...CHILDPROCS.map(p=>p.cores));
+  $('#procsvcbody').innerHTML=CHILDPROCS.map(p=>`<tr class="clk">
+    <td><span class="svcname"><span class="tk ${p.tk}" style="width:15px;height:15px">${p.tech[0]}</span><b>${p.proc}</b> <span class="mono muted small">${p.pid}</span></span></td>
+    <td><span class="pill ${p.svc==='store-backend'?'ok':'info'}" style="font-size:9.5px">${p.svc}</span></td>
+    <td class="small">${p.tech}</td><td class="mono small muted">${p.host}</td>
+    <td><div class="row" style="align-items:center;gap:8px"><span class="mbar" style="flex:1;max-width:120px"><span style="width:${p.cores/mxc*100}%"></span></span><span class="mono small">${p.cores.toFixed(1)} cores</span></div></td>
+    <td class="mono small">${p.tp}</td></tr>`).join('');
+  $$('#procsvcbody tr').forEach(tr=>tr.addEventListener('click',()=>nav('prof-flame')));
+  /* top services this process serves */
+  const mxs=Math.max(...TOPSVC.map(s=>s.pct));
+  $('#topsvcbody').innerHTML=TOPSVC.map(s=>`<tr class="clk">
+    <td><b class="hl">${s.svc}</b></td>
+    <td><div class="row" style="align-items:center;gap:8px"><span class="mbar" style="flex:1;max-width:150px"><span style="width:${s.pct/mxs*100}%"></span></span><span class="mono small">${s.ttc}</span></div></td>
+    <td class="mono">${s.mrt}</td><td class="mono">${s.req}</td></tr>`).join('');
+  $$('#topsvcbody tr').forEach(tr=>tr.addEventListener('click',()=>nav('prof-flame')));
+  /* top code-level contributors */
   const mx=70;
   $('#contribbody').innerHTML=CONTRIB.map(c=>`<tr class="clk">
     <td><b>${c.n}</b></td><td><span class="pill ${c.t==='DB query'?'info':c.t==='Endpoint'?'warn':'ok'}" style="font-size:9.5px">${c.t}</span></td>
-    <td><span class="mbar" style="max-width:120px"><span style="width:${c.c/mx*100}%"></span></span></td>
+    <td><span class="mbar" style="display:inline-block;width:120px;vertical-align:middle"><span style="width:${c.c/mx*100}%"></span></span></td>
     <td class="mono">${c.tp}</td><td class="mono">${c.cpu}</td><td class="mono muted">▸</td></tr>`).join('');
   $$('#contribbody tr').forEach(tr=>tr.addEventListener('click',()=>nav('prof-flame')));
 }
