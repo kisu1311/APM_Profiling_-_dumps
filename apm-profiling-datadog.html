@@ -857,34 +857,39 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
           </div>
         </div>
 
-        <!-- 1 · continuous profile / landing -->
+        <!-- 1 · Datadog overview — select service to view flame graph -->
         <div class="pf-view on" id="pfv-list">
-          <div class="pf-g4">
-            <div class="pf-stat"><div class="v teal">4</div><div class="l">Services profiled · continuous</div></div>
-            <div class="pf-stat"><div class="v">3.76s</div><div class="l">Avg CPU time / min (fleet)</div></div>
-            <div class="pf-stat"><div class="v red">+38%</div><div class="l">Top regression since v1.5.0</div></div>
-            <div class="pf-stat"><div class="v">511 MB</div><div class="l">Live heap · store-backend</div></div>
-          </div>
-          <div class="pf-card pf-pad" style="margin-bottom:14px">
-            <div class="pf-row pf-between pf-wrap" style="margin-bottom:12px">
-              <div class="pf-row pf-aic" style="gap:8px"><b class="pf-b" style="font-size:13px">CPU consumption</b><span class="pf-pill info">continuous profiler ON</span></div>
-              <div class="pf-row pf-aic" style="gap:8px">
-                <div class="pf-seg" id="pfSplit"><button class="on" data-split="svc">Services</button><button data-split="proc">Processes</button></div>
-                <div class="pf-seg" id="pfCt"><button class="on" data-ct="line">Line</button><button data-ct="bar">Bar</button><button data-ct="area">Area</button></div>
-                <button class="pf-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export</button>
+
+          <!-- feasibility banner -->
+          <div class="pf-card" id="pfFeas" style="margin-bottom:14px;border-color:#2b4a6b">
+            <div class="pf-pad" style="display:flex;align-items:flex-start;gap:12px">
+              <span style="flex:none;width:26px;height:26px;border-radius:7px;background:rgba(76,155,255,.16);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#4c9bff" stroke-width="2"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg></span>
+              <div style="flex:1">
+                <div class="pf-b" style="font-size:12.5px;color:#9fc6ff">Datadog-modelled Profiling — flame-graph-first, in the APM module <span class="pf-sm pf-muted" style="font-weight:400">· build 8.2.6 today ships only Services · Explorer · Error Tracker · Compare</span></div>
+                <div class="pf-sm pf-muted" style="margin-top:6px;line-height:1.6">
+                  <b style="color:var(--green)">Fits the current product</b> (service inventory + trace facets already exist): the <b>service list</b> with Total&nbsp;CPU·Cores, drill <b>service → process</b>, the <b>Metrics</b> timeseries and <b>Compare</b> tab. &nbsp;·&nbsp;
+                  <b style="color:var(--orange)">Needs a new profiler backend</b> (not set today): the always-on <b>continuous profiler</b>, the <b>flame graph</b> / <b>call graph</b> / <b>thread timeline</b>, per-metric sampling (<b>CPU Time · Allocated Memory · Wall Time · Socket I/O</b>), the <b>profile list</b> and thread / heap / crash <b>dumps</b>.
+                  <a href="#" id="pfFeasHide" style="color:var(--muted);margin-left:6px">hide</a>
+                </div>
               </div>
             </div>
-            <div class="pf-chart" id="pfCpu"></div>
-            <div class="pf-legend" id="pfCpuLeg"></div>
           </div>
-          <div class="pf-card">
+
+          <div class="pf-g4">
+            <div class="pf-stat"><div class="v teal">6</div><div class="l">Services profiled · continuous</div></div>
+            <div class="pf-stat"><div class="v">3.7</div><div class="l">Top CPU cores · javaDistributed</div></div>
+            <div class="pf-stat"><div class="v">142</div><div class="l">Profiles captured / hr</div></div>
+            <div class="pf-stat"><div class="v">1.5.0</div><div class="l">Latest deployed version</div></div>
+          </div>
+
+          <div class="pf-card" style="margin-top:14px">
             <div class="pf-pad pf-row pf-between pf-aic" style="border-bottom:1px solid var(--border)">
-              <div class="pf-row pf-aic" style="gap:8px"><b class="pf-b" style="font-size:13px" id="pfListTitle">4 services</b><span class="pf-chip mono">▾ Total CPU · Cores</span></div>
-              <div class="pf-row pf-aic" style="gap:8px"><div class="pf-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Search service</div><button class="pf-btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Capture profile</button></div>
+              <b class="pf-b" style="font-size:13px">Select service to view flame graph</b>
+              <div class="pf-row pf-aic" style="gap:8px"><div class="pf-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Search service</div></div>
             </div>
-            <table class="pf-grid"><thead><tr><th id="pfCol0">Service</th><th>Technology</th><th>CPU in GC</th><th>Total CPU · Cores</th><th>Endpoints</th><th></th></tr></thead><tbody id="pfListBody"></tbody></table>
+            <table class="pf-grid"><thead><tr><th style="width:52%">Service</th><th>Technology</th><th style="text-align:right">Total CPU · Cores</th></tr></thead><tbody id="pfListBody"></tbody></table>
           </div>
-          <div class="pf-note"><span class="l">Profiling flow</span>Click a service to open its <b>profile</b> → drill to <b>process</b> → <b>method hotspots</b> → <b>flame graph</b> → jump to source. Every step is live.</div>
+          <div class="pf-note"><span class="l">Datadog flow</span>Expand a service to see its <b>attached processes</b>, or click it (or <b>View Flame Graph</b>) to open the profile <b>details</b> — flame graph, thread timeline, metrics, profile list &amp; call graph.</div>
         </div>
 
         <!-- 2 · service / process detail -->
@@ -932,8 +937,8 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
 
         <!-- 4 · flame graph workspace -->
         <div class="pf-view" id="pfv-flame">
-          <div class="pf-back" data-goto="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to profile</div>
-          <div class="pf-crumb">Profiling <span class="s">›</span> <b>store-backend</b> <span class="s">›</span> Flame Graph</div>
+          <div class="pf-back" data-goto="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to services</div>
+          <div class="pf-crumb">Profiling <span class="s">›</span> <b id="pfFlameName">store-backend</b> <span class="s">›</span> Flame Graph</div>
           <div class="pf-subtabs" id="pfFlameTabs">
             <button class="on" data-f="flame"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s4 4 4 8a4 4 0 01-8 0c0-1 .5-2 .5-2S8 10 8 12a4 4 0 108 0"/></svg>Flame Graph</button>
             <button data-f="timeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h13"/></svg>Thread Timeline</button>
@@ -2811,12 +2816,19 @@ document.addEventListener('click', e=>{
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function rng(seed){let s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
 const ST={pv:'list',apm:'profiling',metric:'cpu',split:'svc',ct:'line',mtab:'rt',f:'flame'};
-const SVCS=[{n:'store-backend',tk:'rb',tech:'Ruby',gc:'2.3%',cpu:92,ep:14},{n:'store-frontend-api',tk:'node',tech:'Node.js',gc:'5.1%',cpu:70,ep:9},{n:'store-worker',tk:'java',tech:'Java',gc:'2.4%',cpu:48,ep:6},{n:'store-ads',tk:'go',tech:'Go',gc:'0.9%',cpu:30,ep:4}];
+const SVCS=[
+ {n:'javaDistributed',sw:'#8b7cf6',ini:'J',tech:'Java',pct:'36.5%',cpu:100,procs:[['host:apm-node-1','container_id:7ad016…58da7a','process_id:59','v1.5.0'],['host:apm-node-1','container_id:7ad016…58da7a','process_id:60','v1.5.0'],['host:apm-node-2','container_id:7ad016…58da7a','process_id:1','v1.5.0']]},
+ {n:'nodeDistributedApp',sw:'#89c540',ini:'N',tech:'Node.js',pct:'24.4%',cpu:67,procs:[['host:apm-node-1','container_id:9f2c…41b','process_id:22','v1.4.2']]},
+ {n:'PHPApp',sw:'#4c9bff',ini:'P',tech:'PHP',pct:'16.9%',cpu:46,procs:[['host:apm-node-3','php-fpm pool:www','process_id:8','v2.1.0']]},
+ {n:'NodeApp',sw:'#89c540',ini:'N',tech:'Node.js',pct:'16.1%',cpu:44,procs:[['host:apm-node-2','container_id:1a8e…c0','process_id:14','v1.4.2']]},
+ {n:'DotnetApp',sw:'#f58518',ini:'D',tech:'.NET',pct:'5.36%',cpu:15,procs:[['host:apm-node-4','container_id:c37b…9d','process_id:3','v3.0.1']]},
+ {n:'pythonDistributedApp',sw:'#f5bc18',ini:'P',tech:'Python',pct:'0.79%',cpu:2,procs:[['host:apm-node-4','uwsgi worker','process_id:7','v0.9.4']]}
+];
 const PROCS=[{n:'puma 5.6 (web)',tk:'rb',tech:'Ruby',gc:'2.3%',cpu:88,ep:14},{n:'sidekiq (worker)',tk:'rb',tech:'Ruby',gc:'1.1%',cpu:52,ep:5},{n:'server.js (frontend)',tk:'node',tech:'Node.js',gc:'5.1%',cpu:70,ep:9},{n:'JobRunner (worker)',tk:'java',tech:'Java',gc:'2.4%',cpu:48,ep:6},{n:'ads-server',tk:'go',tech:'Go',gc:'0.9%',cpu:30,ep:4}];
 const CONTRIB=[{n:'HighCpuUsageMiddleware.InvokeAsync',t:'Method',c:70,tp:'47.4/min',cpu:'442 µs'},{n:'Spree::Api::V2::Storefront::Cart',t:'Endpoint',c:52,tp:'31/min',cpu:'318 µs'},{n:'pg.exec (SELECT orders)',t:'DB query',c:44,tp:'88/min',cpu:'210 µs'},{n:'ActiveRecord::Base.load',t:'Method',c:34,tp:'120/min',cpu:'150 µs'},{n:'AuthZ.check (JWT)',t:'Method',c:22,tp:'120/min',cpu:'96 µs'}];
 const F=(name,val,cls,children)=>({name,val,cls,children:children||[]});
 const TREES={
- cpu:F('WebServer.handle()',376,'web',[F('Rails.dispatch()',250,'rt',[F('AuthZ.check()',96,'app',[F('JWT.verify()',60,'app',[F('crypto.hmac()',38,'oth')]),F('policy.eval()',22,'app')]),F('OrdersController#index',110,'app',[F('ActiveRecord.load()',72,'db',[F('pg.exec SELECT',60,'db')]),F('serialize()',30,'app',[F('json.encode()',22,'oth')])]),F('render()',30,'app')]),F('datadog.trace()',34,'oth',[F('flush()',20,'oth')]),F('GC.collect()',42,'gc'),F('middleware.stack()',40,'rt',[F('rack.session()',24,'rt'),F('logger.rb',10,'oth')])]),
+ cpu:F('http-nio-8080-exec',376,'web',[F('DispatcherServlet.doDispatch()',250,'rt',[F('SecurityFilter.doFilter()',96,'app',[F('JwtVerifier.verify()',60,'app',[F('Mac.doFinal()',38,'oth')]),F('policyEval()',22,'app')]),F('OrderController.list()',110,'app',[F('OrderService.process()',72,'app',[F('Hibernate.doQuery()',60,'db',[F('jdbc.execute SELECT',50,'db')])]),F('ObjectMapper.writeValue()',30,'app',[F('json.serialize()',22,'oth')])]),F('ViewResolver.render()',30,'app')]),F('datadog.trace()',34,'oth',[F('flush()',20,'oth')]),F('G1GC.collect()',42,'gc'),F('FilterChain.doFilter()',40,'rt',[F('SessionRepository.find()',24,'rt'),F('logger.info()',10,'oth')])]),
  wall:F('WebServer.handle()',920,'web',[F('Rails.dispatch()',300,'rt',[F('OrdersController#index',180,'app',[F('ActiveRecord.load()',150,'db',[F('pg.exec SELECT',140,'db')])])]),F('OkHttp.execute()',420,'io',[F('Socket.read()',380,'io')]),F('GC.collect()',60,'gc'),F('sleep(thread_pool)',120,'oth')]),
  mem:F('CompressingRequestBody.writeTo()',300,'app',[F('attemptWrite(InputStream)',180,'app',[F('toZstdStream()',120,'io',[F('byte[] alloc',90,'gc')]),F('Arrays.copyOf()',48,'gc')]),F('java.util.ArrayList',60,'db'),F('String.intern()',40,'oth'),F('buffer()',20,'rt')]),
  heap:F('Live heap',420,'app',[F('byte[]',180,'gc'),F('HashMap$Node',120,'db',[F('CacheEntry',90,'ex')]),F('String',70,'oth'),F('java.util.ArrayList',50,'rt')]),
@@ -2827,9 +2839,9 @@ const TREES={
 const MLABEL={cpu:'CPU Time · 3.76s per minute',wall:'Wall Time · 16m 34s per minute',mem:'Allocated Memory · 3 MiB per minute',heap:'Live Heap · 511 MB',lock:'Lock · 158ms per minute',io:'Socket I/O Read · 14.69s per minute',exc:'Exceptions · 86 per minute'};
 const DIFF=F('Handler.handle()',100,'oth',[F('query() ▲+38%',50,'slow',[F('pg.connect() ▲+22%',30,'slow')]),F('render() ▼-12%',50,'fast',[F('template.rb ▼-8%',20,'fast')]),F('legacyCache() (removed)',22,'base'),F('newBatcher() (added)',28,'new')]);
 const EXEC=[{k:'Code',v:58,c:'#14b8a6'},{k:'Network I/O',v:22,c:'#06b6d4'},{k:'Disk I/O',v:9,c:'#fb923c'},{k:'Lock',v:7,c:'#a855f7'},{k:'Wait',v:4,c:'#eab308'}];
-const ENDPTS=[['Spree::Api::V2::Storefront::Cart',530],['Spree::Api::V2::Storefront::Products',324],['Spree::Api::V2::Storefront::Cart#add',255],['Spree::Api::V2::Checkout',187],['Other activity',126]];
-const FNS=[['datadog',113],['pg.exec',47],['activesupport',22],['activerecord',22],['sleep(thread_pool)',17],['GC.collect',11]];
-const TLROWS=[{n:'puma-worker-1',states:['run','run','sock','safe']},{n:'puma-worker-2',states:['run','sock','run']},{n:'GC-worker-0',states:['gc','safe','gc']},{n:'okhttp-dispatch',states:['sock','wait','sock']},{n:'C2 Compiler',states:['run','run','safe']},{n:'sidekiq-1',states:['wait','wait','run']}];
+const ENDPTS=[['GET /api/v2/orders',530],['GET /api/v2/products',324],['POST /api/v2/cart/add',255],['POST /api/v2/checkout',187],['Other activity',126]];
+const FNS=[['datadog',113],['jdbc.execute',47],['spring-web',22],['hibernate-core',22],['sleep(thread_pool)',17],['G1GC.collect',11]];
+const TLROWS=[{n:'http-nio-exec-1',states:['run','run','sock','safe']},{n:'http-nio-exec-2',states:['run','sock','run']},{n:'G1-GC-worker-0',states:['gc','safe','gc']},{n:'okhttp-dispatch',states:['sock','wait','sock']},{n:'C2-Compiler',states:['run','run','safe']},{n:'JvmStatsThread',states:['wait','wait','run']}];
 const DIFFROWS=[{e:'/api/v2/cart',a:'318ms',b:'438ms',d:'+38%',dir:1},{e:'/api/v2/orders',a:'210ms',b:'232ms',d:'+10%',dir:1},{e:'/api/v2/products',a:'145ms',b:'128ms',d:'-12%',dir:0},{e:'/api/v2/checkout',a:'96ms',b:'70ms',d:'-27%',dir:0}];
 /* charts */
 function mkS(seed,n,base,amp,spike){const r=rng(seed);const a=[];for(let i=0;i<n;i++){let v=base+Math.sin(i/3)*amp*.3+(r()-.5)*amp;if(spike&&i===Math.floor(n*.62))v+=amp*2.4;a.push(Math.max(2,v));}return a;}
@@ -2850,13 +2862,13 @@ function selFrame(n){$('#pfSel').innerHTML='<b class="pf-b">'+esc(n.name)+'</b><
 function inspLists(){$('#pfInspEnd').innerHTML=ENDPTS.map(a=>'<div class="pf-crow"><span class="nm" title="'+a[0]+'">'+a[0]+'</span><span class="pf-bar"><span style="width:'+(a[1]/530*100)+'%"></span></span><span class="mono">'+a[1]+'ms</span></div>').join('');$('#pfInspFn').innerHTML=FNS.map(a=>'<div class="pf-crow"><span class="nm">'+a[0]+'</span><span class="pf-bar b"><span style="width:'+(a[1]/113*100)+'%"></span></span><span class="mono">'+(a[1]>=100?(a[1]/100).toFixed(2)+'s':a[1]+'ms')+'</span></div>').join('');}
 function tl(id,rows,seed){const r=rng(seed);$(id).innerHTML=rows.map(row=>{let segs='',x=0;while(x<100){const w=3+r()*14;const st=row.states[Math.floor(r()*row.states.length)];segs+='<span class="st'+st+'" style="left:'+x+'%;width:'+Math.min(w,100-x)+'%"></span>';x+=w+r()*3;}return '<div class="pf-tlrow"><span class="thn">'+row.n+'</span><span class="pf-lane">'+segs+'</span></div>';}).join('');}
 /* views */
-function renderList(){const list=ST.split==='svc'?SVCS:PROCS;$('#pfListTitle').textContent=(ST.split==='svc'?SVCS.length+' services':PROCS.length+' processes');$('#pfCol0').textContent=ST.split==='svc'?'Service':'Process';const mx=Math.max.apply(0,list.map(x=>x.cpu));$('#pfListBody').innerHTML=list.map(p=>'<tr class="clk" data-svc="'+p.n+'"><td><span class="pf-svc"><span class="pf-tk '+p.tk+'">'+p.tech[0]+'</span><b>'+p.n+'</b></span></td><td>'+p.tech+'</td><td class="pf-mono">'+p.gc+'</td><td><div class="pf-row pf-aic" style="gap:8px"><span class="pf-bar" style="flex:1;max-width:160px"><span style="width:'+(p.cpu/mx*100)+'%"></span></span><span class="pf-mono pf-sm">'+(p.cpu/25).toFixed(1)+' cores</span></div></td><td class="pf-mono">'+p.ep+'</td><td class="pf-mono pf-muted">⌕ ⋯</td></tr>').join('');$$('#pfListBody tr').forEach(tr=>tr.addEventListener('click',()=>{$('#pfDetailName').textContent=tr.dataset.svc;go('detail');}));}
+function renderList(){const mx=Math.max.apply(0,SVCS.map(x=>x.cpu));let html='';SVCS.forEach((p,i)=>{html+='<tr class="clk ddsvc" data-svc="'+p.n+'"><td><span class="pf-svc"><span class="ddcaret" data-exp="'+i+'" style="display:inline-block;width:14px;color:var(--muted);cursor:pointer;transition:transform .15s">›</span><span style="width:16px;height:16px;border-radius:4px;background:'+p.sw+';display:inline-flex;align-items:center;justify-content:center;color:#0a0620;font-size:10px;font-weight:700">'+p.ini+'</span><b>'+p.n+'</b><span class="ddvfg pf-btn" data-svc="'+p.n+'" style="margin-left:10px;padding:3px 9px;font-size:10.5px">View Flame Graph</span></span></td><td>'+p.tech+'</td><td><div class="pf-row pf-aic" style="gap:8px;justify-content:flex-end"><span class="pf-bar" style="width:150px"><span style="width:'+(p.cpu/mx*100)+'%"></span></span><span class="pf-mono pf-sm" style="min-width:46px;text-align:right">'+p.pct+'</span></div></td></tr>';html+='<tr class="ddproc" id="ddproc-'+i+'" style="display:none"><td colspan="3" style="background:var(--panel-2);padding:0"><div style="padding:8px 34px"><div class="pf-sm pf-muted" style="margin-bottom:6px">Showing all '+p.procs.length+' available processes</div>'+p.procs.map(pr=>'<div class="pf-row pf-aic pf-wrap" style="gap:8px;padding:5px 0;border-bottom:1px solid var(--border-soft)"><span style="width:8px;height:8px;border-radius:50%;background:'+p.sw+'"></span>'+pr.map(t=>'<span class="pf-chip mono" style="font-size:10px">'+t+'</span>').join('')+'</div>').join('')+'</div></td></tr>';});$('#pfListBody').innerHTML=html;function openSvc(n){const el=$('#pfFlameName');if(el)el.textContent=n;go('flame');}$$('#pfListBody .ddcaret').forEach(c=>c.addEventListener('click',e=>{e.stopPropagation();const row=$('#ddproc-'+c.dataset.exp);const open=row.style.display==='none';row.style.display=open?'table-row':'none';c.style.transform=open?'rotate(90deg)':'none';}));$$('#pfListBody .ddvfg').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openSvc(b.dataset.svc);}));$$('#pfListBody tr.ddsvc').forEach(tr=>tr.addEventListener('click',()=>openSvc(tr.dataset.svc)));}
 const SUBV={rt:['Median','Slowest 10%','Slowest 5%'],fr:['Failure rate','HTTP errors'],cpu:['CPU per request','CPU total'],tp:['Requests']};
 const MNM={rt:'Median response time',fr:'Failure rate',cpu:'CPU per request',tp:'Requests/min'};
 function renderDetail(){const sv=SUBV[ST.mtab];$('#pfSubview').innerHTML=sv.map((s,i)=>'<button class="'+(i===0?'on':'')+'">'+s+'</button>').join('');$('#pfMetricName').textContent=MNM[ST.mtab];const cfg={rt:{c:'#06b6d4',b:50,a:26},fr:{c:'#f2504b',b:18,a:10},cpu:{c:'#a855f7',b:30,a:14},tp:{c:'#14b8a6',b:60,a:20}}[ST.mtab];chart($('#pfDetailChart'),[{name:'v',color:cfg.c,data:mkS(70+ST.mtab.length,60,cfg.b,cfg.a,1)}],ST.mtab==='fr'?'bar':'area',200);$$('#pfSubview button').forEach(b=>b.addEventListener('click',()=>{$$('#pfSubview button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));const mx=70;$('#pfContrib').innerHTML=CONTRIB.map(c=>'<tr class="clk"><td><b>'+c.n+'</b></td><td><span class="pf-pill '+(c.t==='DB query'?'info':c.t==='Endpoint'?'warn':'ok')+'" style="font-size:9.5px">'+c.t+'</span></td><td><span class="pf-bar" style="max-width:120px"><span style="width:'+(c.c/mx*100)+'%"></span></span></td><td class="pf-mono">'+c.tp+'</td><td class="pf-mono">'+c.cpu+'</td><td class="pf-mono pf-muted">▸</td></tr>').join('');$$('#pfContrib tr').forEach(tr=>tr.addEventListener('click',()=>go('flame')));}
 function renderHot(){donut('#pfExecDonut',EXEC,'#pfExecLeg');const rows=[['puma > handle_request','88ms',0],['&nbsp;&nbsp;Rails.dispatch','72ms',0],['&nbsp;&nbsp;&nbsp;&nbsp;OrdersController#index','58ms',1],['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ActiveRecord.load','44ms',1],['&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pg.exec SELECT','40ms',1],['&nbsp;&nbsp;AuthZ.check','22ms',0],['&nbsp;&nbsp;GC.collect','11ms',0]];$('#pfHsTree').innerHTML=rows.map(a=>'<div class="pf-crow" style="padding:5px 0;border-bottom:1px solid var(--border-soft)"><span class="nm pf-mono" style="font-size:11.5px;color:'+(a[2]?'var(--red)':'var(--text)')+'">'+a[0]+'</span><span class="pf-bar" style="flex:0 0 90px"><span style="width:'+(parseInt(a[1])/88*100)+'%;background:'+(a[2]?'var(--red)':'var(--teal)')+'"></span></span><span class="pf-mono">'+a[1]+'</span></div>').join('');}
 function renderFlameWs(){flame('#pfFlame',TREES[ST.metric],null,ST.metric,false);$('#pfFlameTotal').textContent=MLABEL[ST.metric];selFrame(TREES[ST.metric]);inspLists();$('#pfFlameLeg').innerHTML=['web','rt','app','db','io','gc'].map(c=>'<span><i class="fc'+c+'" style="border-radius:3px"></i>'+CN[c]+'</span>').join('');tl('#pfFlameTL',TLROWS.slice(0,4),90);}
-function renderPL(){const r=rng(7);let rows='';for(let i=0;i<10;i++){const min=51-i;rows+='<tr class="clk"><td><span class="pf-tk rb" style="width:14px;height:14px">R</span></td><td class="pf-mono">Jul 16 15:'+(min>9?min:'0'+min)+':38</td><td><b>store-backend</b></td><td class="pf-mono">'+(r()*0.2).toFixed(2)+'</td><td class="pf-mono">'+(2+r()*2).toFixed(0)+' MiB</td><td class="pf-mono">1.5.0</td><td class="pf-mono pf-muted">apm-host-1</td></tr>';}$('#pfProfileList').innerHTML=rows;$$('#pfProfileList tr').forEach(tr=>tr.addEventListener('click',()=>setFT('flame')));}
+function renderPL(){const r=rng(7);const el=$('#pfFlameName');const nm=(el&&el.textContent)||'javaDistributed';let rows='';for(let i=0;i<10;i++){const min=51-i;rows+='<tr class="clk"><td><span class="pf-tk" style="width:14px;height:14px;background:#8b7cf6;color:#0a0620">D</span></td><td class="pf-mono">Jul 16 15:'+(min>9?min:'0'+min)+':38</td><td><b>'+nm+'</b></td><td class="pf-mono">'+(3+r()*0.7).toFixed(1)+'</td><td class="pf-mono">'+(2+r()*2).toFixed(0)+' MiB</td><td class="pf-mono">1.5.0</td><td class="pf-mono pf-muted">apm-node-1</td></tr>';}$('#pfProfileList').innerHTML=rows;$$('#pfProfileList tr').forEach(tr=>tr.addEventListener('click',()=>setFT('flame')));}
 function renderCG(){const nodes=[['puma.handle',376,'web',0],['Rails.dispatch',250,'rt',1],['OrdersController#index',110,'app',2],['ActiveRecord.load',72,'db',3],['pg.exec',60,'db',4],['AuthZ.check',96,'app',2],['GC.collect',42,'gc',1]];const cm={web:'#14b8a6',rt:'#06b6d4',db:'#22c55e',gc:'#eab308',app:'#a855f7'};$('#pfCG').innerHTML=nodes.map(a=>'<div style="margin:5px 0;margin-left:'+(a[3]*26)+'px">'+(a[3]?'<span style="color:var(--muted);font-family:JetBrains Mono">└▸ </span>':'')+'<span style="display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:12px;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:'+cm[a[2]]+'"></span>'+a[0]+'<span style="font-family:JetBrains Mono;font-size:10px;color:var(--muted);margin-left:6px">self '+(a[1]/100).toFixed(2)+'s</span></span></div>').join('');}
 function renderDiff(){flame('#pfDiff',DIFF,null,'cpu',true);$('#pfDiffBody').innerHTML=DIFFROWS.map(r=>'<tr><td><b>'+r.e+'</b></td><td class="pf-mono">'+r.a+'</td><td class="pf-mono">'+r.b+'</td><td class="pf-mono" style="color:'+(r.dir?'var(--red)':'var(--green)')+';font-weight:600">'+r.d+'</td></tr>').join('');}
 /* nav */
@@ -2872,15 +2884,13 @@ window.initProfiling=function(){
     wired=true;
     $('#pfApmTabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(t)setApm(t.dataset.apm);});
     $$('#view-profiling [data-goto]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.goto)));
-    $('#pfSplit').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.split=b.dataset.split;$$('#pfSplit button').forEach(x=>x.classList.toggle('on',x===b));renderCpu();renderList();});
-    $('#pfCt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.ct=b.dataset.ct;$$('#pfCt button').forEach(x=>x.classList.toggle('on',x===b));renderCpu();});
-    $('#pfMetricTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.mtab=b.dataset.m;$$('#pfMetricTabs button').forEach(x=>x.classList.toggle('on',x===b));renderDetail();});
-    $('#pfHsTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#pfHsTabs button').forEach(x=>x.classList.toggle('on',x===b));$('#pfHsTitle').textContent={api:'Top APIs — CPU by API grouping',exec:'Call hierarchy (forward) + Hotspots (reverse)',call:'Call hierarchy (forward)',hot:'Hotspots (reverse stacks)'}[b.dataset.h];});
+    var _mt=$('#pfMetricTabs'); if(_mt)_mt.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.mtab=b.dataset.m;$$('#pfMetricTabs button').forEach(x=>x.classList.toggle('on',x===b));renderDetail();});
+    var _ht=$('#pfHsTabs'); if(_ht)_ht.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#pfHsTabs button').forEach(x=>x.classList.toggle('on',x===b));$('#pfHsTitle').textContent={api:'Top APIs — CPU by API grouping',exec:'Call hierarchy (forward) + Hotspots (reverse)',call:'Call hierarchy (forward)',hot:'Hotspots (reverse stacks)'}[b.dataset.h];});
     $('#pfFlameTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setFT(b.dataset.f);});
     $('#pfMetricChips').addEventListener('click',e=>{const c=e.target.closest('[data-metric]');if(!c)return;ST.metric=c.dataset.metric;$$('#pfMetricChips .pf-chip').forEach(x=>x.classList.toggle('on',x===c));renderFlameWs();});
-    $('#pfReset').addEventListener('click',renderFlameWs);
+    var _rs=$('#pfReset'); if(_rs)_rs.addEventListener('click',renderFlameWs);
+    var _fh=$('#pfFeasHide'); if(_fh)_fh.addEventListener('click',ev=>{ev.preventDefault();var fe=$('#pfFeas');if(fe)fe.style.display='none';});
   }
-  renderCpu();
   setApm('profiling');
 };
 /* boot ran selectModule(10) before this script defined initProfiling — self-init if the view is already active */
@@ -2922,10 +2932,10 @@ if(_pfv&&_pfv.classList.contains('on'))window.initProfiling();
 </style>
 <div id="deliv-switch" role="navigation" aria-label="APM Profiling deliverables">
   <span class="ds-lbl">APM · Profiling &amp; Dumps</span>
-  <a class="ds-on" href="index.html"><span class="n">1</span><span class="ds-full">In&#8209;product</span></a>
+  <a href="index.html"><span class="n">1</span><span class="ds-full">In&#8209;product</span></a>
   <a href="apm-profiling-dumps-prototype.html"><span class="n">2</span><span class="ds-full">Prototype</span></a>
   <a href="apm-profiling-dynatrace.html"><span class="n">3</span><span class="ds-full">Dynatrace</span></a>
-  <a href="apm-profiling-datadog.html"><span class="n">4</span><span class="ds-full">Datadog</span></a>
+  <a class="ds-on" href="apm-profiling-datadog.html"><span class="n">4</span><span class="ds-full">Datadog</span></a>
   <span class="ds-div"></span>
   <a class="ds-note" href="apm-profiling-dumps-redesign.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v14a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg><span class="ds-full">Notes</span></a>
 </div>

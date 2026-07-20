@@ -3,3 +3,7 @@ node_modules/
 .env.*
 .DS_Store
 dist/
+
+# internal spec PDF + dev-only annotation widget — never publish to the public repo
+*.pdf
+agentation-embed.js
