@@ -920,7 +920,7 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
               <span class="avl no">CPU columns require profiler</span>
             </div>
             <table class="pf-grid"><thead><tr><th>Name</th><th>Technology</th><th class="col-no">CPU in GC ⚑</th><th class="col-no">Consumed CPU ⚑</th><th>Actions</th></tr></thead><tbody id="pfListBody"></tbody></table>
-            <div class="pf-note"><span class="l">Flow</span>Click a process → its <b>details page</b> (split by processes / services) → drill to a <b>service</b>, then <b>method hotspots</b>, <b>outliers</b> or <b>top contributors</b>.</div>
+            <div class="pf-note"><span class="l">Flow</span>Click a process → its <b>details page</b> (split by processes / services) → drill to a <b>service</b>, then <b>method hotspots</b> or <b>analyze outliers</b>.</div>
           </div>
         </div>
 
@@ -950,7 +950,7 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
                 <tr class="clk" data-svc="payment-service"><td><span class="pf-svc"><span style="width:16px;height:16px;border-radius:4px;background:#f5bc18;display:inline-flex;align-items:center;justify-content:center;color:#0a0620;font-size:10px;font-weight:700">J</span><b>javaDistributed · payment-service</b></span><div class="pf-sm pf-muted" style="margin-top:2px">aks-default-1849 · service: <b style="color:#4c9bff">payment-service</b></div></td><td>Java</td><td class="pf-mono">3.1 %</td><td><div class="pf-row pf-aic" style="gap:8px"><span class="pf-bar" style="flex:1;max-width:150px"><span style="width:46%"></span></span><span class="pf-mono pf-sm">5 min 52 s</span></div></td><td class="pf-mono pf-muted">⌕ ⋯</td></tr>
               </tbody>
             </table>
-            <div class="pf-note"><span class="l">Rule</span>Single service attached → open <b>top contributors</b>. Multiple services → <b>top contributors + top services</b>. Click a row to continue.</div>
+            <div class="pf-note"><span class="l">Rule</span>Click a process row to list its <b>attached services</b>, then a service to open its <b>device monitor</b>; buttons below → <b>method hotspots</b> &amp; outliers.</div>
           </div>
 
           <div class="pf-card" style="margin-top:14px">
@@ -1004,31 +1004,105 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
           </div>
         </div>
 
-        <!-- 4 · Top contributors & analysis view -->
-        <div class="pf-view" id="pfv-contrib">
+        <!-- 5 · Attached services — list of all services on the clicked process; opened by clicking a process row -->
+        <div class="pf-view" id="pfv-services">
           <div class="pf-back" data-goto="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to details</div>
-          <div class="pf-crumb">Profiling <span class="s">›</span> <b>javaDistributed · order-service</b> <span class="s">›</span> Top contributors</div>
+          <div class="pf-crumb">Profiling <span class="s">›</span> <b id="pfSvcProc">javaDistributed</b> <span class="s">›</span> Attached services</div>
 
           <div class="pf-card">
-            <div class="pf-pad pf-row pf-aic pf-between pf-wrap" style="border-bottom:1px solid var(--border);gap:8px"><b class="pf-b" style="font-size:13px">1 top contributor</b><div class="pf-row pf-aic" style="gap:8px"><span class="avl">Throughput live</span><span class="avl no">CPU column requires profiler</span><button class="pf-btn">＋ Create analysis view</button></div></div>
-            <div class="pf-pad" style="padding-bottom:0">
-              <div class="pf-subtabs" id="pfCtabTabs"><button class="on" data-c="req">Top requests</button><button data-c="attr">Request attributes</button><button data-c="cm">Custom metrics</button></div>
+            <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">4 attached services <span class="pf-muted pf-sm">· click a service to open its device monitor</span></b></div>
+            <table class="pf-grid">
+              <thead><tr><th>Service</th><th>Technology</th><th>Requests / min</th><th>Median response</th><th>Host</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#8b7cf6;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">O</span><b style="color:#4c9bff">order-service</b></span></td><td>Java</td><td class="pf-mono">318 /min</td><td class="pf-mono">42 ms</td><td class="pf-mono pf-muted">aks-default-1849</td><td class="pf-mono pf-muted">⌕ →</td></tr>
+                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#f5bc18;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">P</span><b style="color:#4c9bff">payment-service</b></span></td><td>Java</td><td class="pf-mono">210 /min</td><td class="pf-mono">63 ms</td><td class="pf-mono pf-muted">aks-default-1849</td><td class="pf-mono pf-muted">⌕ →</td></tr>
+                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#14b053;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">I</span><b style="color:#4c9bff">inventory-service</b></span></td><td>Java</td><td class="pf-mono">145 /min</td><td class="pf-mono">28 ms</td><td class="pf-mono pf-muted">aks-default-1851</td><td class="pf-mono pf-muted">⌕ →</td></tr>
+                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#4c9bff;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">N</span><b style="color:#4c9bff">notification-service</b></span></td><td>Java</td><td class="pf-mono">96 /min</td><td class="pf-mono">51 ms</td><td class="pf-mono pf-muted">aks-default-1851</td><td class="pf-mono pf-muted">⌕ →</td></tr>
+              </tbody>
+            </table>
+            <div class="pf-note"><span class="l">Next</span>Click a service to open its <b>device monitor</b> template ↓</div>
+          </div>
+        </div>
+
+        <!-- 6 · Monitor (device) template — opened by clicking a service in the attached-services list -->
+        <div class="pf-view" id="pfv-monitor">
+          <div class="pf-back" data-goto="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to services</div>
+
+          <!-- host header -->
+          <div class="pf-row pf-aic pf-wrap" style="gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+            <span class="pf-muted">›</span>
+            <span style="display:inline-flex;gap:3px"><span style="width:15px;height:15px;background:#357ec7;border-radius:2px;display:inline-block"></span><span style="width:15px;height:15px;background:#5aa0e0;border-radius:2px;display:inline-block"></span></span>
+            <b style="font-size:15px;color:var(--text)">Windows-agent-7</b>
+            <span class="pf-muted pf-sm">| 192.0.2.208 |</span>
+            <span class="pf-muted pf-sm">Windows</span>
+            <span class="pf-pill crit">Down</span>
+            <span class="pf-chip" style="margin-left:4px">Server › Windows <span class="pf-muted">+1</span></span>
+            <span class="pf-chip mono" style="color:#5fd0c4">hypervisor:esxi <span class="pf-muted">+5</span></span>
+            <div class="pf-row pf-aic" style="gap:9px;margin-left:auto">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid #f2504b;color:#f2504b;font-weight:700;font-size:11px">1</span>
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid #a855f7;color:#c4a2f7;font-weight:700;font-size:11px">9</span>
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid #14b053;color:#3ed17e;font-weight:700;font-size:11px">7</span>
             </div>
-            <table class="pf-grid" id="pfCtabBody"></table>
-            <div class="pf-note"><span class="l">Next</span><b>Create analysis view</b> turns any row into a saved, chartable dimension breakdown ↓</div>
           </div>
 
-          <div class="pf-card" style="margin-top:14px">
-            <div class="pf-pad pf-row pf-aic pf-between" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">Analysis view <span class="pf-muted pf-sm">· dimension breakdown</span> <span class="avl no" style="margin-left:6px">CPU-time avg requires profiler</span></b><div class="pf-row pf-aic" style="gap:10px"><div class="pf-seg" id="pfAvCt"><button class="on" data-ct="line">Line</button><button data-ct="bar">Bar</button><button data-ct="area">Area</button></div><button class="pf-btn">＋ Create metric…</button></div></div>
-            <div class="pf-pad"><div id="pfAvChart"></div></div>
-            <table class="pf-grid"><thead><tr><th>Top dimension</th><th>Request count</th><th>CPU time (avg)</th><th>Actions</th></tr></thead><tbody><tr><td><span class="pf-svc"><span style="width:11px;height:11px;border-radius:3px;background:#8b7cf6;display:inline-block"></span><b>HighCpuUsageMiddleware.InvokeAsync</b></span></td><td class="pf-mono">5.64k</td><td class="pf-mono">393 µs</td><td class="pf-mono pf-muted">▾ ⋯</td></tr></tbody></table>
+          <!-- stat cards -->
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px">
+            <div class="pf-card pf-pad"><div style="width:30px;height:30px;border-radius:7px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg></div><div class="pf-b" style="font-size:14px;margin-bottom:3px">CPU</div><div class="pf-sm pf-muted" style="margin-bottom:16px">User: -&nbsp;&nbsp;&nbsp;Interrupt: -</div><div class="pf-mono" style="font-size:22px;color:var(--muted)">—</div></div>
+            <div class="pf-card pf-pad"><div style="width:30px;height:30px;border-radius:7px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M7 6v12M11 6v12M15 6v12"/></svg></div><div class="pf-b" style="font-size:14px;margin-bottom:3px">Memory</div><div class="pf-sm pf-muted" style="margin-bottom:16px">Total: -&nbsp;&nbsp;&nbsp;Free: -</div><div class="pf-mono" style="font-size:22px;color:var(--muted)">—</div></div>
+            <div class="pf-card pf-pad"><div style="width:30px;height:30px;border-radius:7px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg></div><div class="pf-b" style="font-size:14px;margin-bottom:3px">Disk</div><div class="pf-sm pf-muted" style="margin-bottom:16px">Total: -&nbsp;&nbsp;&nbsp;Free: -</div><div class="pf-mono" style="font-size:22px;color:var(--muted)">—</div></div>
+            <div class="pf-card pf-pad"><div style="width:30px;height:30px;border-radius:7px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><div class="pf-b" style="font-size:14px;margin-bottom:3px">Uptime</div><div class="pf-sm pf-muted" style="margin-bottom:16px">&nbsp;</div><div class="pf-mono" style="font-size:22px;color:var(--muted)">—</div></div>
+            <div class="pf-card pf-pad"><div style="width:30px;height:30px;border-radius:7px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M8 7l3 9M16 7l-3 9"/></svg></div><div class="pf-b" style="font-size:14px;margin-bottom:3px">Network</div><div class="pf-row" style="gap:18px;margin-bottom:8px"><div><div class="pf-sm pf-muted">IN</div><div class="pf-mono" style="font-size:18px;color:var(--muted)">—</div></div><div><div class="pf-sm pf-muted">OUT</div><div class="pf-mono" style="font-size:18px;color:var(--muted)">—</div></div></div></div>
+            <div class="pf-card pf-pad"><div style="width:30px;height:30px;border-radius:7px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:10px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="pf-b" style="font-size:14px;margin-bottom:3px">Response Time</div><div class="pf-sm pf-muted" style="margin-bottom:16px">Lost Packets: -</div><div class="pf-mono" style="font-size:22px;color:var(--muted)">—</div></div>
           </div>
 
-          <div class="pf-note" style="margin-top:14px"><span class="l">Multi-service</span>When a process serves multiple services you also get a <b>Top services</b> list — total time consumption + median response time — each with its own <b>Create analysis view</b>.</div>
+          <!-- availability + disk utilization -->
+          <div style="display:grid;grid-template-columns:0.85fr 1.5fr 1.5fr;gap:12px;margin-bottom:14px">
+            <div class="pf-card">
+              <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">Today's Availability</b></div>
+              <div class="pf-pad" style="display:flex;justify-content:center;align-items:center;min-height:200px">
+                <svg viewBox="0 0 100 100" width="160" height="160"><circle cx="50" cy="50" r="40" fill="none" stroke="#e0342c" stroke-width="13"/><text x="50" y="47" text-anchor="middle" fill="#7a8aa5" font-size="8.5">Up</text><text x="50" y="60" text-anchor="middle" fill="#e8edf3" font-size="13" font-weight="700">0%</text></svg>
+              </div>
+            </div>
+            <div class="pf-card">
+              <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">Availability Statistics</b></div>
+              <div class="pf-pad">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px"><span style="width:34px;height:34px;border-radius:8px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);flex:none"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></span><div style="flex:1"><div class="pf-sm" style="color:var(--text);font-weight:600;margin-bottom:6px">Last Day</div><div style="height:9px;border-radius:5px;background:#e0342c"></div><div class="pf-row pf-between pf-sm pf-muted" style="margin-top:4px"><span>0%</span><span>100%</span></div></div></div>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px"><span style="width:34px;height:34px;border-radius:8px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);flex:none"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></span><div style="flex:1"><div class="pf-sm" style="color:var(--text);font-weight:600;margin-bottom:6px">Last 7 Days</div><div style="height:9px;border-radius:5px;background:#e0342c"></div><div class="pf-row pf-between pf-sm pf-muted" style="margin-top:4px"><span>0%</span><span>100%</span></div></div></div>
+                <div style="display:flex;align-items:center;gap:12px"><span style="width:34px;height:34px;border-radius:8px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;color:var(--muted);flex:none"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></span><div style="flex:1"><div class="pf-sm" style="color:var(--text);font-weight:600;margin-bottom:6px">Last 15 Days</div><div style="height:9px;border-radius:5px;background:#e0342c"></div><div class="pf-row pf-between pf-sm pf-muted" style="margin-top:4px"><span>0%</span><span>100%</span></div></div></div>
+              </div>
+            </div>
+            <div class="pf-card">
+              <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">System Disk Utilization</b></div>
+              <div class="pf-pad" style="display:flex;justify-content:center;align-items:center;min-height:200px"><span class="pf-sm pf-muted">No data found</span></div>
+            </div>
+          </div>
 
-          <div class="pf-card" style="margin-top:12px">
-            <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">1 service instance</b></div>
-            <table class="pf-grid"><thead><tr><th>Name</th><th>Total time consumption</th><th>Median response time</th><th>Actions</th></tr></thead><tbody><tr class="clk"><td><b style="color:#4c9bff">javaDistributed · order-service (frontend-*)</b></td><td><span class="pf-bar" style="display:inline-block;width:150px;vertical-align:middle"><span style="width:63%"></span></span></td><td class="pf-mono">1.91 ms</td><td class="pf-mono pf-muted">⌕ ▾ ⋯</td></tr></tbody></table>
+          <!-- details (down → no data) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+            <div class="pf-card"><div class="pf-pad pf-row pf-aic pf-between" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">CPU Details</b><span style="color:#8b7cf6">✦</span></div><div class="pf-pad" style="display:flex;justify-content:center;align-items:center;min-height:140px"><span class="pf-sm pf-muted">No data found</span></div></div>
+            <div class="pf-card"><div class="pf-pad pf-row pf-aic pf-between" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">Memory Details</b><span style="color:#8b7cf6">✦</span></div><div class="pf-pad" style="display:flex;justify-content:center;align-items:center;min-height:140px"><span class="pf-sm pf-muted">No data found</span></div></div>
+            <div class="pf-card"><div class="pf-pad pf-row pf-aic pf-between" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">Idle/Interrupt CPU</b><span style="color:#8b7cf6">✦</span></div><div class="pf-pad" style="display:flex;justify-content:center;align-items:center;min-height:140px"><span class="pf-sm pf-muted">No data found</span></div></div>
+          </div>
+
+          <!-- service status + process details -->
+          <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:12px">
+            <div class="pf-card">
+              <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">Service Status</b></div>
+              <table class="pf-grid"><thead><tr><th>Service</th><th>Status</th></tr></thead><tbody>
+                <tr><td><b>Appinfo</b></td><td><span style="color:#a78bfa;border:1px solid rgba(167,139,250,.38);background:rgba(167,139,250,.12);border-radius:100px;padding:2px 11px;font-size:10.5px;font-weight:600;white-space:nowrap">Unreachable</span></td></tr>
+                <tr><td><b>TermService</b></td><td><span style="color:#a78bfa;border:1px solid rgba(167,139,250,.38);background:rgba(167,139,250,.12);border-radius:100px;padding:2px 11px;font-size:10.5px;font-weight:600;white-space:nowrap">Unreachable</span></td></tr>
+              </tbody></table>
+            </div>
+            <div class="pf-card">
+              <div class="pf-pad pf-row pf-aic pf-between pf-wrap" style="border-bottom:1px solid var(--border);gap:10px"><b class="pf-b" style="font-size:13px">Process Details</b><span class="pf-chip" style="min-width:220px;color:var(--muted)">⌕ Search</span></div>
+              <table class="pf-grid"><thead><tr><th>Process</th><th>Command</th><th>Name</th><th>Status</th></tr></thead><tbody>
+                <tr><td><b>svchost.exe</b> <span class="pf-muted">ⓘ</span></td><td class="pf-muted">—</td><td class="pf-muted">—</td><td><span style="color:#a78bfa;border:1px solid rgba(167,139,250,.38);background:rgba(167,139,250,.12);border-radius:100px;padding:2px 11px;font-size:10.5px;font-weight:600;white-space:nowrap">Unreachable</span></td></tr>
+                <tr><td><b>svchost.exe</b> <span class="pf-muted">ⓘ</span></td><td class="pf-muted">—</td><td class="pf-muted">—</td><td><span style="color:#a78bfa;border:1px solid rgba(167,139,250,.38);background:rgba(167,139,250,.12);border-radius:100px;padding:2px 11px;font-size:10.5px;font-weight:600;white-space:nowrap">Unreachable</span></td></tr>
+                <tr><td><b>svchost.exe</b> <span class="pf-muted">ⓘ</span></td><td class="pf-muted">—</td><td class="pf-muted">—</td><td><span style="color:#a78bfa;border:1px solid rgba(167,139,250,.38);background:rgba(167,139,250,.12);border-radius:100px;padding:2px 11px;font-size:10.5px;font-weight:600;white-space:nowrap">Unreachable</span></td></tr>
+                <tr><td><b>lsass.exe</b> <span class="pf-muted">ⓘ</span></td><td class="pf-muted">—</td><td class="pf-muted">—</td><td><span style="color:#a78bfa;border:1px solid rgba(167,139,250,.38);background:rgba(167,139,250,.12);border-radius:100px;padding:2px 11px;font-size:10.5px;font-weight:600;white-space:nowrap">Unreachable</span></td></tr>
+              </tbody></table>
+            </div>
           </div>
         </div>
 
@@ -2882,18 +2956,6 @@ const METHODS=[
  ['G1CollectedHeap.collect()',17],
  ['javax.crypto.Mac.doFinal()',11]
 ];
-const CTAB={
- req:{cols:['Name','Contribution','Throughput','CPU','Actions'],rows:[
-   ['HighCpuUsageMiddleware.InvokeAsync',74,'43.4 /min','442 µs/req'],
-   ['GET /api/v2/orders',56,'31 /min','318 µs/req'],
-   ['POST /api/v2/checkout',44,'12 /min','664 µs/req']]},
- attr:{cols:['Name','Contribution','Throughput','CPU','Actions'],rows:[
-   ['easytrade.longBuy',52,'2.98 /min','664 µs/req'],
-   ['customer.tier=gold',31,'8.1 /min','214 µs/req']]},
- cm:{cols:['Name','Average','Total','Actions'],rows:[
-   ['easytrade.longBuy','227k','1.31M'],
-   ['order.items.count','18','9.4k']]}
-};
 const SIG={
  rt:{views:['Median','Slowest 10%','Slowest 5%'],name:'Median response time',color:'#8b7cf6',type:'area',seed:120,base:70,amp:60,spike:1,avail:'live',doc:'Latency'},
  fr:{views:['Failure rate','HTTP errors'],name:'Failure rate',color:'#f25c4e',type:'bar',seed:130,base:14,amp:10,avail:'live',doc:'Error Rate'},
@@ -2925,15 +2987,11 @@ function renderDetail(){renderDetailCpu();ST.sig='rt';ST.sigView=0;$$('#pfSigTab
 /* ---- method hotspots ---- */
 function renderMethod(){const mx=METHODS[0][1];$('#pfMethodList').innerHTML=METHODS.map(m=>'<div class="pf-crow" style="padding:7px 0;border-bottom:1px solid var(--border-soft)"><span class="nm pf-mono" style="font-size:11.5px;color:var(--text)">'+m[0]+'</span><span class="pf-bar" style="flex:0 0 160px"><span style="width:'+(m[1]/mx*100)+'%;background:'+(m[1]===mx?'var(--red)':'var(--teal)')+'"></span></span><span class="pf-mono">'+(m[1]/100).toFixed(2)+'s</span></div>').join('');}
 
-/* ---- top contributors ---- */
-function renderContrib(){renderCtab('req');chart($('#pfAvChart'),[{name:'av',color:'#8b7cf6',data:mkS(160,60,900,700,1)}],ST.avct,210);}
-function renderCtab(key){const t=CTAB[key];let head='<thead><tr>'+t.cols.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead>';let body='<tbody>'+t.rows.map(r=>{let cells='<td><b style="color:#4c9bff">'+r[0]+'</b></td>';if(key==='cm'){cells+='<td class="pf-mono">'+r[1]+'</td><td class="pf-mono">'+r[2]+'</td>';}else{cells+='<td><span class="pf-bar" style="display:inline-block;width:130px;vertical-align:middle"><span style="width:'+r[1]+'%"></span></span></td><td class="pf-mono">'+r[2]+'</td><td class="pf-mono">'+r[3]+'</td>';}cells+='<td class="pf-mono pf-muted">⤢ ▾ ⋯</td>';return '<tr class="clk">'+cells+'</tr>';}).join('')+'</tbody>';$('#pfCtabBody').innerHTML=head+body;}
-
 /* ---- nav ---- */
-function go(pv){ST.pv=pv;$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));const el=$('#pfv-'+pv);if(el)el.classList.add('on');if(pv==='list')renderList();if(pv==='detail')renderDetail();if(pv==='method')renderMethod();if(pv==='contrib')renderContrib();setHead();const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
+function go(pv){ST.pv=pv;$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));const el=$('#pfv-'+pv);if(el)el.classList.add('on');if(pv==='list')renderList();if(pv==='detail')renderDetail();if(pv==='method')renderMethod();setHead();const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
 /* dynamic breadcrumb title in the APM header — shows where you are on every screen */
 const TABNAME={services:'Services',explorer:'Explorer',errors:'Error Tracker',compare:'Compare',profiling:'Profiling'};
-const SCRNAME={list:'',detail:'Process details',method:'Method hotspots',contrib:'Top contributors'};
+const SCRNAME={list:'',detail:'Process details',method:'Method hotspots',services:'Attached services',monitor:'Monitor'};
 function setHead(){const el=$('#pfHeadTitle');if(!el)return;const parts=['APM'];if(ST.apm!=='profiling'){parts.push(TABNAME[ST.apm]||'');}else{parts.push('Profiling');const svc=($('#pfDetailName')&&$('#pfDetailName').textContent||'').trim();if(ST.pv!=='list'&&svc)parts.push(svc);const scr=SCRNAME[ST.pv];if(scr)parts.push(scr);}el.innerHTML=parts.filter(Boolean).map((p,i)=>i?'<span class="hd-sep">▸</span><span class="hd-ctx">'+p+'</span>':p).join('');}
 
 const STUBMSG={
@@ -2952,13 +3010,12 @@ window.initProfiling=function(){
     wired=true;
     $('#pfApmTabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(t)setApm(t.dataset.apm);});
     document.addEventListener('click',e=>{const g=e.target.closest('#view-profiling [data-goto]');if(g)go(g.dataset.goto);});
-    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-detail tbody tr.clk');if(r)go('contrib');});
+    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-detail tbody tr.clk');if(r){var pn=$('#pfDetailName'),sp=$('#pfSvcProc');if(pn&&sp)sp.textContent=pn.textContent;go('services');}});
+    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-services tbody tr.clk');if(r)go('monitor');});
     $('#pfCt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.ct=b.dataset.ct;$$('#pfCt button').forEach(x=>x.classList.toggle('on',x===b));renderCpu();});
     $('#pfCt2').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.ct2=b.dataset.ct;$$('#pfCt2 button').forEach(x=>x.classList.toggle('on',x===b));renderDetailCpu();});
     $('#pfSplit').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.split=b.dataset.split;$$('#pfSplit button').forEach(x=>x.classList.toggle('on',x===b));renderDetailCpu();});
     $('#pfSigTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.sig=b.dataset.sig;ST.sigView=0;$$('#pfSigTabs button').forEach(x=>x.classList.toggle('on',x===b));renderSignals();});
-    $('#pfCtabTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#pfCtabTabs button').forEach(x=>x.classList.toggle('on',x===b));renderCtab(b.dataset.c);});
-    $('#pfAvCt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.avct=b.dataset.ct;$$('#pfAvCt button').forEach(x=>x.classList.toggle('on',x===b));chart($('#pfAvChart'),[{name:'av',color:'#8b7cf6',data:mkS(160,60,900,700,1)}],ST.avct,210);});
     const fh=$('#pfFeasHide');if(fh)fh.addEventListener('click',ev=>{ev.preventDefault();$('#pfFeas').style.display='none';});
   }
   renderCpu();
@@ -3005,9 +3062,9 @@ if(_pfv&&_pfv.classList.contains('on'))window.initProfiling();
   <span class="ds-lbl">APM · Profiling &amp; Dumps</span>
   <a href="index.html"><span class="n">1</span><span class="ds-full">In&#8209;product</span></a>
   <a href="apm-profiling-dumps-prototype.html"><span class="n">2</span><span class="ds-full">Prototype</span></a>
-  <a class="ds-on" href="apm-profiling-dynatrace.html"><span class="n">3</span><span class="ds-full">Dynatrace</span></a>
+  <a href="apm-profiling-dynatrace.html"><span class="n">3</span><span class="ds-full">Dynatrace</span></a>
   <a href="apm-profiling-datadog.html"><span class="n">4</span><span class="ds-full">Datadog</span></a>
-  <a href="apm-profiling-dynatrace-v2.html"><span class="n">5</span><span class="ds-full">Dynatrace v2</span></a>
+  <a class="ds-on" href="apm-profiling-dynatrace-v2.html"><span class="n">5</span><span class="ds-full">Dynatrace v2</span></a>
   <span class="ds-div"></span>
   <a class="ds-note" href="apm-profiling-dumps-redesign.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v14a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg><span class="ds-full">Notes</span></a>
 </div>

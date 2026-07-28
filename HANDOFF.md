@@ -1,33 +1,37 @@
-# Handoff — 2026-07-27 14:10
+# Handoff — 2026-07-28 12:18
 
 ## Read first
-See **CLAUDE.md** — **Structure** (the 5 deliverables + shared switcher) and **Key context** (the doc-grounded live-vs-profiler data model). This session worked only on the two in-product reference designs: `apm-profiling-datadog.html` (most of the work) and `apm-profiling-dynatrace.html`.
+See **CLAUDE.md** — the **Structure** section (now lists **six** deliverables; note the new `apm-profiling-dynatrace-v2.html` bullet) and the **deliverable switcher** paragraph (now **five** numbered options, `5 Dynatrace v2`). This session shipped the Datadog flame-graph work, then built a new **Dynatrace v2 variant** with a device-monitor drill-down.
 
 ## What we worked on this session
-Made the **Datadog** flow's flame-graph detail show child processes and behave like the real Datadog profiler: a per-service **Processes panel** plus an **interactive, collapsible flame graph** (default-collapsed, click-to-expand, expand-all/collapse-all icons). Also added a **dynamic breadcrumb** to the **Dynatrace** flow's APM header.
+Published the Datadog interactive collapsible flame graph, then created and fleshed out a **new sixth deliverable** — `apm-profiling-dynatrace-v2.html`: a trimmed Dynatrace flow that drills **process → attached-services list → device-monitor template**, and wired it into the shared switcher as option 5.
 
 ## Completed
-- **`apm-profiling-dynatrace.html`** — dynamic breadcrumb in the APM header (`APM ▸ Profiling ▸ <service> ▸ <screen>`), updates on every nav via `setHead()` (called from `go()` and `setApm()`). Fixed an undefined `--muted2` token (→ `--muted`) so the separators render dimmed. **Committed + LIVE** (commit `8b76ab3`).
-- **`apm-profiling-datadog.html` — Processes panel** on the flame view: keyed to the selected service from `SVCS[].procs`, shows "N processes · M hosts", chip row (All processes + one per runtime `host · pid`), a green **`scoped · pid NN @ host`** pill when scoped, and a "Show runtimes" table (Runtime · Host · Container/Pool · Process ID · Version). Functions: `svcByName`, `procMeta`, `renderProcScope`, `scopeProc`, `updateScopeNote`; called from `go('flame')`. **Committed + LIVE** (commit `8b76ab3`).
-- **`apm-profiling-datadog.html` — interactive collapsible flame graph** (this is the **UNCOMMITTED** part): each node gets a stable `_id`; a `COLLAPSED` set folds subtrees; `lay()` skips collapsed subtrees (but always expands the focused node); `flame()` renders a **▾/▸ caret** on frames with children; **defaults to fully collapsed** (root + one level) via `collapseAll()` seeded at load; **click a frame body to expand it one level in place**, click the caret to toggle, click an already-expanded frame to zoom. Added **Expand-all / Collapse-all icon buttons** (`#pfExpandAll` / `#pfCollapseAll`) in the flame toolbar (`reflameKeep()` preserves zoom focus); Reset-zoom re-collapses to default. All verified with headless screenshots.
+- **Published `5ae9f28`** (LIVE) — the Datadog interactive collapsible flame graph (▾/▸ carets, default-collapsed, click-to-expand, Expand-all/Collapse-all icons) from the prior session.
+- **Created `apm-profiling-dynatrace-v2.html`** — cloned from `apm-profiling-dynatrace.html`, then **removed the Top contributors screen** (`pfv-contrib` + its data/wiring: `renderContrib`/`renderCtab`/`CTAB`, the `pfCtabTabs`/`pfAvCt` bindings, `go()` branch, `contrib` breadcrumb entry — all cleaned, no dangling refs).
+- **Connected v2 as switcher option `5 Dynatrace v2`** across **all 6 files** (inserted before the Notes divider; v2 marks option 5 active and un-marks option 3). Done via a guarded Python insert on the identical `ds-div` anchor.
+- **Device-monitor template `pfv-monitor`** — built from an agentation annotation; reproduces the live Motadata **Windows-agent-7** dashboard in the prototype theme (host header + Down + 1/9/7 severity, 6 stat cards, red "Up 0%" donut, availability-stats bars, "No data found" panels, Service Status + Process Details tables). Internal IP scrubbed `172.16.13.208 → 192.0.2.208`.
+- **Attached-services list `pfv-services`** — per the follow-up clarification, inserted an intermediate step: clicking a **process** row opens a list of its attached services (order/payment/inventory/notification), and clicking a **service** opens the monitor. Final flow: **overview → process details → process row → attached services → service → device monitor**. The method-hotspots/outliers buttons still reach `pfv-method`.
+- **Agentation** annotation `ms49t0y3-6w5l5u` acknowledged + **resolved** with a summary.
 
 ## In progress
-Nothing mid-flight. The uncommitted flame-graph changes in `apm-profiling-datadog.html` are complete and verified — they just haven't been pushed.
+Nothing mid-flight. All v2 screens render and the two-hop drill-down is verified with screenshots.
 
 ## Next steps
-- **Publish the uncommitted flame-graph work**: run `/publish` (commits `apm-profiling-datadog.html` and auto-redeploys on push to `main`). `git status` shows one modified file (~18-line diff).
-- Optional (raised, not done): the datadog flow's `pfv-detail` view is **orphaned** (list jumps straight to the flame graph) and still carries the old "Top contributors · attached services + child processes" **mislabel** that was fixed in `index.html` — clean it up or delete the dead view.
-- Optional carry-overs from before: apply the live-vs-profiler availability badges to `index`; add a Dumps pillar to the in-product flows; add an "Open in Profiling" hop from Services/Explorer.
+- **Publish everything** — run `/publish`. Uncommitted: **1 new file** (`apm-profiling-dynatrace-v2.html`) + **5 modified** (`index`, `prototype`, `redesign`, `dynatrace`, `datadog` — each only gained the `5 Dynatrace v2` switcher link) + `CLAUDE.md`/`HANDOFF.md`. ⚠️ Publish them **together**: the `5 Dynatrace v2` link 404s on the live originals until `apm-profiling-dynatrace-v2.html` is also live.
+- Open question flagged to the user (in the agentation resolve): if "list of all services" was meant to also change the *details* grid itself (vs. the new intermediate list), revisit.
+- Optional carry-overs: the Datadog flow's orphaned `pfv-detail` view still has the old "Top contributors · attached services + child processes" **mislabel** (unreachable — list jumps to flame). Also: availability badges on `index`; a Dumps pillar in the in-product flows.
 
 ## Decisions made
-- **Datadog = "Processes/runtimes", not "attached services."** Datadog's profiler aggregates a service's profile across runtimes tagged by host/container/process_id/version — that's the correct Datadog analog of "child processes", and it's deliberately different from the Dynatrace/native "attached services" framing.
-- **Flame graph defaults to collapsed**, one level at a time — matches the reference the user gave (Datadog frames with ▾/▸ carets, collapsed subtrees). Body-click expands a collapsed frame *in place* (keeps focus) and only zooms once expanded, so "click to expand" and "click to zoom" coexist without a mode toggle.
-- **Collapse state is session-persistent** (a global `COLLAPSED` set, seeded once). Metric switches don't re-collapse (new tree = new `_id`s); Expand-all/Collapse-all and Reset-zoom are the explicit resets.
-- Kept the change **isolated to the datadog file** — index/dynatrace flame graphs stay fully-expanded, so this doesn't regress the other deliverables even though they share the flame code's ancestry.
+- **v2 is a separate variant file**, not an edit of the original Dynatrace deliverable — keeps option 3 intact and lets the two be compared side by side.
+- **Wired v2 into every switcher** (all 6 files), not just its own — a switcher option that exists in only one file isn't reachable, so "connected as a 5th option" required editing all files (per the repo's duplicated-switcher convention).
+- **Two-hop drill-down** (process → attached services → monitor) rather than process → monitor directly, per the user's explicit clarification. The intermediate `pfv-services` breadcrumb picks up the process name from `#pfDetailName`.
+- **Device monitor mirrors the live Windows-agent dashboard faithfully** in its *Down/empty* state (mostly "—" / "No data found" / "Unreachable") — simple to reproduce and true to the reference screenshot; IP scrubbed for the public repo.
 
 ## Gotchas & notes
-- **Inline `.pf-bar` progress bars collapse in table cells** unless given an explicit `display:inline-block;width:NNpx` (or placed in a flex row) — recurring issue across these files.
-- **Re-`Read` an HTML file immediately before `Edit`** — Prettier reformats single-line → multi-line when the IDE opens it, breaking `old_string` matches.
-- **Headless-screenshot recipe**: plain `--screenshot` (NOT `--virtual-time-budget`, it hangs here); python-inject a `<script>` before `</body>` using a **literal** `</script>`. Datadog nav to the flame view = click `#pfListBody tr.ddsvc[data-svc='<name>']`. Keep the injected click delay **short (~120–150ms)** — a long `setTimeout` sometimes fires *after* the headless capture (saw list-view instead of flame at 500ms).
-- **`gh` is not installed** — `/publish` uses git + the GitHub REST API (osxkeychain token). Repo `kisu1311/APM_Profiling_-_dumps`, live at https://kisu1311.github.io/APM_Profiling_-_dumps/.
-- Keep internal IPs scrubbed to `192.0.2.x` in committed files (public repo); the only IP literals in these files are `127.0.0.1` (localhost), which is fine.
+- **Switcher is duplicated per file** — any add/reorder must touch the block in **every** file (there are now 6). The uniform anchor is the `  <span class="ds-div"></span>` line.
+- **`5 Dynatrace v2` link 404s live until v2 is published** — always publish the v2 file with the switcher changes, never the switcher changes alone.
+- **Agentation MCP**: check feedback with `agentation_get_all_pending`; flow is acknowledge → do the work → resolve (with a summary). Tools are deferred — load via ToolSearch first.
+- **v2 detail-row click now → `services`** (was `monitor`, originally `method`); **services-row click → `monitor`**. Both are global `document` click listeners in `initProfiling`.
+- Headless-screenshot recipe unchanged; keep the injected click delay **short (~150ms)** — long `setTimeout` can fire after the capture. Nav: `#pfListBody tr` → detail, then `#pfv-detail tbody tr.clk` → services, then `#pfv-services tbody tr.clk` → monitor.
+- Keep internal IPs scrubbed to `192.0.2.x` in committed files (public repo). `gh` is not installed — `/publish` uses git + the GitHub REST API. Repo `kisu1311/APM_Profiling_-_dumps`, live at https://kisu1311.github.io/APM_Profiling_-_dumps/.
