@@ -1,37 +1,99 @@
-# Handoff — 2026-07-28 12:18
+# Handoff — 2026-07-29 23:11
 
 ## Read first
-See **CLAUDE.md** — the **Structure** section (now lists **six** deliverables; note the new `apm-profiling-dynatrace-v2.html` bullet) and the **deliverable switcher** paragraph (now **five** numbered options, `5 Dynatrace v2`). This session shipped the Datadog flame-graph work, then built a new **Dynatrace v2 variant** with a device-monitor drill-down.
+See **CLAUDE.md** — the **`apm-profiling-dynatrace-v2.html`** bullet in *Structure*, which was
+rewritten this session and is now much longer than the others. That file grew from "a trimmed
+Dynatrace variant" into the richest deliverable: it now has a real **Services** tab, a **per-service
+page**, and the profiling flow reachable from **two** entry points. Everything this session happened
+in that one file; the other five are untouched.
 
 ## What we worked on this session
-Published the Datadog interactive collapsible flame graph, then created and fleshed out a **new sixth deliverable** — `apm-profiling-dynatrace-v2.html`: a trimmed Dynatrace flow that drills **process → attached-services list → device-monitor template**, and wired it into the shared switcher as option 5.
+Built out `apm-profiling-dynatrace-v2.html` in three passes, each from a screenshot of the live
+product: (1) filled the empty **APM ▸ Services** tab with the live service card grid, (2) made a
+service click open the **live service page** (Overview…Logs) with a new **Profiling** tab, and
+(3) replaced that Profiling tab's placeholder content with the **real profiling flow**, starting at
+Process details.
 
 ## Completed
-- **Published `5ae9f28`** (LIVE) — the Datadog interactive collapsible flame graph (▾/▸ carets, default-collapsed, click-to-expand, Expand-all/Collapse-all icons) from the prior session.
-- **Created `apm-profiling-dynatrace-v2.html`** — cloned from `apm-profiling-dynatrace.html`, then **removed the Top contributors screen** (`pfv-contrib` + its data/wiring: `renderContrib`/`renderCtab`/`CTAB`, the `pfCtabTabs`/`pfAvCt` bindings, `go()` branch, `contrib` breadcrumb entry — all cleaned, no dangling refs).
-- **Connected v2 as switcher option `5 Dynatrace v2`** across **all 6 files** (inserted before the Notes divider; v2 marks option 5 active and un-marks option 3). Done via a guarded Python insert on the identical `ds-div` anchor.
-- **Device-monitor template `pfv-monitor`** — built from an agentation annotation; reproduces the live Motadata **Windows-agent-7** dashboard in the prototype theme (host header + Down + 1/9/7 severity, 6 stat cards, red "Up 0%" donut, availability-stats bars, "No data found" panels, Service Status + Process Details tables). Internal IP scrubbed `172.16.13.208 → 192.0.2.208`.
-- **Attached-services list `pfv-services`** — per the follow-up clarification, inserted an intermediate step: clicking a **process** row opens a list of its attached services (order/payment/inventory/notification), and clicking a **service** opens the monitor. Final flow: **overview → process details → process row → attached services → service → device monitor**. The method-hotspots/outliers buttons still reach `pfv-method`.
-- **Agentation** annotation `ms49t0y3-6w5l5u` acknowledged + **resolved** with a summary.
+- **Services tab (`pfv-apmsvc`)** — the live 8.2.6 card grid: 9 services with globe + severity ring +
+  inline tech logo (Java / Node / PHP / Python / .NET, hand-drawn SVG), **Response Time** and
+  **Throughput** area sparklines, and an **Error Count** bar sparkline that only appears when errors > 0.
+  Working **search filter** (name or technology, with an empty state) and a **card ↔ list** view toggle.
+  All `pfs-`prefixed; sparklines seeded so they render identically every load.
+- **Service page (`pfv-svcdetail`)** — replaces the APM head + tab bar like the real product does
+  (`svdChrome()`). Header: back chevron · globe · `Integration | <service>` + logo · `1h / Last 1 Hour`
+  + timestamps. Tabs: Overview · Transactions · API Endpoint · Database · JVM · Error Tracker · Logs ·
+  **Profiling NEW**. All `svd-`prefixed.
+- **Overview tab** — the 6 KPI cards (Response Time, P99, Total Requests, Throughput, Error Count in
+  red, Error %), 3 axis charts (Response Time with the `service.trace.duration.us/p99/p50.avg` legend,
+  Request Throughput, stacked Requests & Errors) and the **Service Map** (severity-ringed globe nodes,
+  arrowed edges, zoom cluster). Per-service data via `SVCDET`; the six live tabs get a short
+  "mirrors live current state" panel.
+- **Charts scale per service** — `svdNice()` picks 3–5 round axis steps, so javaDistributed reads
+  `0 / 10 s / 20 s / 30 s` and PHPApp reads `0 / 100 … 400 ms`; the red share of the stacked bars
+  tracks each service's real error percentage (all-teal for the zero-error services).
+- **Profiling tab hosts the real flow** — its placeholder content (banner, 4 profiler KPIs, CPU chart,
+  hotspot list, dumps row) was removed and replaced with the actual **Process details** screen. One
+  copy of the four flow views is **moved** between `#pfBody` and `#svdProf` (`svdProfHome()` /
+  `svdProfMount()`), and **`pfGo()`** dispatches every `data-goto` / row click to `goSvcProf()` in-tab
+  or `go()` at top level. Full chain works in both: process row → attached services → device monitor →
+  back, and → method hotspots.
+- **Per-service processes** — `PROCSPEC` (9 services × 2 processes + 4 attached services) drives
+  `renderProcs()` / `renderAttached()`, so PHPApp shows `php-fpm · pool www` on `web-fpm-04` instead of
+  javaDistributed's. This also fixed the **top-level** flow, which previously showed javaDistributed's
+  processes for every service.
+- **Small fixes** — the device monitor's "Back to services" link pointed at Process details
+  (`data-goto="detail"` → `"services"`); breadcrumbs now show `<service> · <process>`; dead CSS
+  (`.svd-pf4`, `.svd-pfk`, `.svd-dump`, `.svd-dc`, `.svd-c2`) removed.
 
 ## In progress
-Nothing mid-flight. All v2 screens render and the two-hop drill-down is verified with screenshots.
+Nothing mid-flight. Verified in headless Chrome: **9 services × 8 tabs** render with no console errors,
+the flow mounts at Process details in every one, the in-tab drill-down and all back links work, and the
+top-level `APM ▸ Profiling` flow (list → details → back) is unaffected.
 
 ## Next steps
-- **Publish everything** — run `/publish`. Uncommitted: **1 new file** (`apm-profiling-dynatrace-v2.html`) + **5 modified** (`index`, `prototype`, `redesign`, `dynatrace`, `datadog` — each only gained the `5 Dynatrace v2` switcher link) + `CLAUDE.md`/`HANDOFF.md`. ⚠️ Publish them **together**: the `5 Dynatrace v2` link 404s on the live originals until `apm-profiling-dynatrace-v2.html` is also live.
-- Open question flagged to the user (in the agentation resolve): if "list of all services" was meant to also change the *details* grid itself (vs. the new intermediate list), revisit.
-- Optional carry-overs: the Datadog flow's orphaned `pfv-detail` view still has the old "Top contributors · attached services + child processes" **mislabel** (unreachable — list jumps to flame). Also: availability badges on `index`; a Dumps pillar in the in-product flows.
+- **Publish** — run `/publish`. Only `apm-profiling-dynatrace-v2.html` is modified (plus
+  `CLAUDE.md` / `HANDOFF.md`). No switcher changes this time, so there's no cross-file publish
+  dependency like last session.
+- **Decide whether to port any of this to the other deliverables.** The Services tab, service page and
+  in-tab profiling now exist **only in v2** — `index`, `dynatrace` and `datadog` still show the
+  "No data found" stub on their non-profiling APM tabs. Porting is a real cost (the switcher lesson:
+  anything shared has to be applied per file).
+- Optional carry-overs from before: the Datadog flow's orphaned `pfv-detail` "Top contributors"
+  mislabel; availability badges on `index`; a Dumps pillar in the in-product flows.
 
 ## Decisions made
-- **v2 is a separate variant file**, not an edit of the original Dynatrace deliverable — keeps option 3 intact and lets the two be compared side by side.
-- **Wired v2 into every switcher** (all 6 files), not just its own — a switcher option that exists in only one file isn't reachable, so "connected as a 5th option" required editing all files (per the repo's duplicated-switcher convention).
-- **Two-hop drill-down** (process → attached services → monitor) rather than process → monitor directly, per the user's explicit clarification. The intermediate `pfv-services` breadcrumb picks up the process name from `#pfDetailName`.
-- **Device monitor mirrors the live Windows-agent dashboard faithfully** in its *Down/empty* state (mostly "—" / "No data found" / "Unreachable") — simple to reproduce and true to the reference screenshot; IP scrubbed for the public repo.
+- **The service page replaces the APM chrome** rather than nesting under it — the live product hides
+  the APM tab bar on a service page, so `svdChrome(true)` hides `.pagehead` + `#pfApmTabs` and the
+  service's own header/tab bar takes over. The back chevron is the only way out, as in the real product.
+- **Move the flow views, don't duplicate them.** The Profiling tab needed the same four screens the
+  top-level tab uses. Cloning the markup would have doubled ~200 lines and guaranteed drift, so the
+  nodes are relocated between two hosts and a dispatcher picks the navigator. All existing
+  render functions and delegated handlers kept working unchanged.
+- **Made the process/attached-service rows dynamic** even though the ask was only about the tab. Once
+  the flow opens per service, hardcoded "javaDistributed · order-service" rows would have looked broken
+  on the other 8 — and the same bug already existed in the top-level flow.
+- **Cards click through to the service page**, not straight into profiling — matches the live product,
+  and the Profiling tab is then the deliberate "here's the new thing" step.
 
 ## Gotchas & notes
-- **Switcher is duplicated per file** — any add/reorder must touch the block in **every** file (there are now 6). The uniform anchor is the `  <span class="ds-div"></span>` line.
-- **`5 Dynatrace v2` link 404s live until v2 is published** — always publish the v2 file with the switcher changes, never the switcher changes alone.
-- **Agentation MCP**: check feedback with `agentation_get_all_pending`; flow is acknowledge → do the work → resolve (with a summary). Tools are deferred — load via ToolSearch first.
-- **v2 detail-row click now → `services`** (was `monitor`, originally `method`); **services-row click → `monitor`**. Both are global `document` click listeners in `initProfiling`.
-- Headless-screenshot recipe unchanged; keep the injected click delay **short (~150ms)** — long `setTimeout` can fire after the capture. Nav: `#pfListBody tr` → detail, then `#pfv-detail tbody tr.clk` → services, then `#pfv-services tbody tr.clk` → monitor.
-- Keep internal IPs scrubbed to `192.0.2.x` in committed files (public repo). `gh` is not installed — `/publish` uses git + the GitHub REST API. Repo `kisu1311/APM_Profiling_-_dumps`, live at https://kisu1311.github.io/APM_Profiling_-_dumps/.
+- **Two navigators now exist.** `go()` = top-level profiling flow; `goSvcProf()` = the same screens
+  inside the service page; **`pfGo()`** picks between them. Any *new* `data-goto` button must go through
+  `pfGo`, never `go` directly, or it will break in-tab.
+- **`renderSvcDetail()` calls `svdProfHome()` first** — it wipes `#svdBody.innerHTML`, which would
+  destroy the flow views if they were still mounted there. Same reason `go()` and `goSvc()` call it.
+- **Prefix discipline held**: `pfs-` = Services grid, `svd-` = service page, `pf-` = the original
+  profiling flow. Keep it — this file is one flat stylesheet + one flat script and duplicate
+  class/function names fail silently (see the repo-root CLAUDE.md gotchas).
+- **Headless screenshots**: run against a **copy in the scratchpad**, not the file in place — the
+  549 KB `agentation-embed.js` sits next to the real file and keeps headless Chrome from exiting, so
+  the command hangs until it's killed. Inject a `<script>` before `</body>` that clicks the target
+  (`#pfApmTabs .tab[data-apm="services"]` → `#pfsGrid .pfs-card[data-svc="…"]` →
+  `#svdTabs button[data-st="profiling"]`), with ~700–900 ms delay and `--virtual-time-budget=3500`.
+- **SVG text and `preserveAspectRatio`**: the card sparklines use `preserveAspectRatio="none"` (fine —
+  paths only, with `vector-effect="non-scaling-stroke"`), but the axis charts must not, or the labels
+  distort. Their apparent text size depends on the viewBox width vs. the panel width, so a wide panel
+  needs a wider viewBox (`W:900` on the CPU chart) to match the others.
+- Keep internal IPs scrubbed to `192.0.2.x` in committed files (public repo). `gh` is not installed —
+  `/publish` uses git + the GitHub REST API. Repo `kisu1311/APM_Profiling_-_dumps`, live at
+  https://kisu1311.github.io/APM_Profiling_-_dumps/.

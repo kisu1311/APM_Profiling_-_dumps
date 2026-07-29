@@ -871,6 +871,41 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
           </div>
         </div>
 
+        <!-- ===== APM ▸ Services — mirrors the LIVE 8.2.6 services card grid ===== -->
+        <div class="pf-view" id="pfv-apmsvc">
+          <div class="pfs-bar">
+            <label class="pfs-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16.7 16.7"/></svg><input id="pfsQ" type="text" placeholder="Search" autocomplete="off" spellcheck="false"></label>
+            <span style="flex:1"></span>
+            <button class="pfs-vbtn on" id="pfsVgrid" title="Card view" aria-label="Card view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="6.5" rx="1.6"/><rect x="3" y="13.5" width="18" height="6.5" rx="1.6"/><path d="M13 7.2h5M13 16.8h5"/></svg></button>
+            <button class="pfs-vbtn" id="pfsVlist" title="List view" aria-label="List view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="2.6"/></svg></button>
+          </div>
+          <div id="pfsGrid"></div>
+          <div class="pf-sm pf-muted" style="margin-top:16px;line-height:1.7;max-width:96ch">
+            Mirrors the <b style="color:var(--text-dim)">live APM ▸ Services tab (build 8.2.6)</b> — Response&nbsp;Time, Throughput and Error&nbsp;Count per service are <span class="avl">Live in APM today</span>.
+            Everything code-level (CPU, method hotspots, flame graphs, dumps) lives in the <b style="color:var(--teal)">Profiling</b> tab and is <span class="avl no">Requires profiler</span>.
+            <span style="color:var(--text-dim)">Click any service to open its page — Overview · Transactions · API Endpoint · Database · JVM · Error Tracker · Logs, plus the new <b style="color:var(--teal)">Profiling</b> tab.</span>
+          </div>
+        </div>
+
+        <!-- ===== APM ▸ Services ▸ <service> — live service page + the NEW Profiling tab ===== -->
+        <div class="pf-view" id="pfv-svcdetail">
+          <div class="svd-hd">
+            <button class="svd-back" id="svdBack" title="Back to Services" aria-label="Back to Services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <svg class="svd-gl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.7 2.8 2.7 15.2 0 18M12 3c-2.7 2.8-2.7 15.2 0 18"/></svg>
+            <span class="pfs-dot orange"></span><span class="svd-parent">Integration</span>
+            <span class="svd-sep"></span>
+            <span class="pfs-dot orange" id="svdDot"></span>
+            <span class="svd-name" id="svdName">javaDistributed</span>
+            <span class="svd-logo" id="svdLogo"></span>
+            <div class="svd-when">
+              <div class="svd-tr"><b>1h</b><span>Last 1 Hour</span></div>
+              <div class="svd-dates">Wed, Jul 29, 2026 09:31:29 PM<br>Wed, Jul 29, 2026 10:31:29 PM</div>
+            </div>
+          </div>
+          <div class="svd-tabs" id="svdTabs"></div>
+          <div id="svdBody"></div>
+        </div>
+
         <!-- ===================== DYNATRACE-STYLE PROFILING FLOW ===================== -->
 
         <!-- 1 · APM Explorer overview (continuous profile) -->
@@ -942,13 +977,10 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
           </div>
 
           <div class="pf-card" style="margin-top:14px">
-            <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">2 processes <span class="pf-muted pf-sm">· with attached services</span></b></div>
+            <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px"><span id="pfProcCount">2</span> processes <span class="pf-muted pf-sm">· with attached services</span></b></div>
             <table class="pf-grid">
               <thead><tr><th>Name</th><th>Technology</th><th>CPU in GC</th><th>Consumed CPU</th><th>Actions</th></tr></thead>
-              <tbody>
-                <tr class="clk" data-svc="order-service"><td><span class="pf-svc"><span style="width:16px;height:16px;border-radius:4px;background:#8b7cf6;display:inline-flex;align-items:center;justify-content:center;color:#0a0620;font-size:10px;font-weight:700">J</span><b>javaDistributed · order-service</b></span><div class="pf-sm pf-muted" style="margin-top:2px">aks-default-1849 · service: <b style="color:#4c9bff">order-service</b></div></td><td>Java</td><td class="pf-mono">4.8 %</td><td><div class="pf-row pf-aic" style="gap:8px"><span class="pf-bar" style="flex:1;max-width:150px"><span style="width:88%"></span></span><span class="pf-mono pf-sm">12 min 20 s</span></div></td><td class="pf-mono pf-muted">⌕ ⋯</td></tr>
-                <tr class="clk" data-svc="payment-service"><td><span class="pf-svc"><span style="width:16px;height:16px;border-radius:4px;background:#f5bc18;display:inline-flex;align-items:center;justify-content:center;color:#0a0620;font-size:10px;font-weight:700">J</span><b>javaDistributed · payment-service</b></span><div class="pf-sm pf-muted" style="margin-top:2px">aks-default-1849 · service: <b style="color:#4c9bff">payment-service</b></div></td><td>Java</td><td class="pf-mono">3.1 %</td><td><div class="pf-row pf-aic" style="gap:8px"><span class="pf-bar" style="flex:1;max-width:150px"><span style="width:46%"></span></span><span class="pf-mono pf-sm">5 min 52 s</span></div></td><td class="pf-mono pf-muted">⌕ ⋯</td></tr>
-              </tbody>
+              <tbody id="pfProcBody"></tbody>
             </table>
             <div class="pf-note"><span class="l">Rule</span>Click a process row to list its <b>attached services</b>, then a service to open its <b>device monitor</b>; buttons below → <b>method hotspots</b> &amp; outliers.</div>
           </div>
@@ -984,7 +1016,7 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
         <!-- 3 · Method hotspots & outliers -->
         <div class="pf-view" id="pfv-method">
           <div class="pf-back" data-goto="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to details</div>
-          <div class="pf-crumb">Profiling <span class="s">›</span> <b>javaDistributed · order-service</b> <span class="s">›</span> Method hotspots</div>
+          <div class="pf-crumb">Profiling <span class="s">›</span> <b id="pfMethProc">javaDistributed · order-service</b> <span class="s">›</span> Method hotspots</div>
 
           <div class="pf-row pf-aic pf-wrap" style="gap:10px;margin-bottom:14px">
             <span class="pf-sm pf-muted">Analyze requests during</span>
@@ -1013,12 +1045,7 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
             <div class="pf-pad" style="border-bottom:1px solid var(--border)"><b class="pf-b" style="font-size:13px">4 attached services <span class="pf-muted pf-sm">· click a service to open its device monitor</span></b></div>
             <table class="pf-grid">
               <thead><tr><th>Service</th><th>Technology</th><th>Requests / min</th><th>Median response</th><th>Host</th><th>Actions</th></tr></thead>
-              <tbody>
-                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#8b7cf6;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">O</span><b style="color:#4c9bff">order-service</b></span></td><td>Java</td><td class="pf-mono">318 /min</td><td class="pf-mono">42 ms</td><td class="pf-mono pf-muted">aks-default-1849</td><td class="pf-mono pf-muted">⌕ →</td></tr>
-                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#f5bc18;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">P</span><b style="color:#4c9bff">payment-service</b></span></td><td>Java</td><td class="pf-mono">210 /min</td><td class="pf-mono">63 ms</td><td class="pf-mono pf-muted">aks-default-1849</td><td class="pf-mono pf-muted">⌕ →</td></tr>
-                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#14b053;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">I</span><b style="color:#4c9bff">inventory-service</b></span></td><td>Java</td><td class="pf-mono">145 /min</td><td class="pf-mono">28 ms</td><td class="pf-mono pf-muted">aks-default-1851</td><td class="pf-mono pf-muted">⌕ →</td></tr>
-                <tr class="clk"><td><span class="pf-svc"><span style="width:15px;height:15px;border-radius:4px;background:#4c9bff;display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">N</span><b style="color:#4c9bff">notification-service</b></span></td><td>Java</td><td class="pf-mono">96 /min</td><td class="pf-mono">51 ms</td><td class="pf-mono pf-muted">aks-default-1851</td><td class="pf-mono pf-muted">⌕ →</td></tr>
-              </tbody>
+              <tbody id="pfAttBody"></tbody>
             </table>
             <div class="pf-note"><span class="l">Next</span>Click a service to open its <b>device monitor</b> template ↓</div>
           </div>
@@ -1026,7 +1053,7 @@ html[data-theme="light"] .ddseg{background:var(--panel-2)}
 
         <!-- 6 · Monitor (device) template — opened by clicking a service in the attached-services list -->
         <div class="pf-view" id="pfv-monitor">
-          <div class="pf-back" data-goto="detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to services</div>
+          <div class="pf-back" data-goto="services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Back to services</div>
 
           <!-- host header -->
           <div class="pf-row pf-aic pf-wrap" style="gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
@@ -2930,6 +2957,98 @@ document.addEventListener('click', e=>{
 .pf-search{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--muted);font-size:12px;min-width:180px}
 .pf-search svg{width:14px;height:14px;flex-shrink:0}
 .pf-empty{text-align:center;padding:56px 20px;color:var(--muted)}
+
+/* ---- APM ▸ Services tab (mirrors the live 8.2.6 service card grid) ---- */
+.pfs-bar{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.pfs-search{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:6px;padding:0 10px;height:32px;flex:0 0 288px}
+.pfs-search svg{width:14px;height:14px;color:var(--muted);flex-shrink:0}
+.pfs-search input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);font:500 12px 'Inter',system-ui,sans-serif}
+.pfs-search input::placeholder{color:var(--muted)}
+.pfs-vbtn{width:34px;height:32px;border:1px solid var(--border);border-radius:6px;background:var(--panel-2);color:var(--text-dim);display:grid;place-items:center;cursor:pointer;padding:0}
+.pfs-vbtn svg{width:16px;height:16px}
+.pfs-vbtn:hover{color:var(--text);border-color:var(--teal-dim)}
+.pfs-vbtn.on{background:var(--card-head);color:var(--teal);border-color:var(--teal-dim)}
+.pfs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:1320px){.pfs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:860px){.pfs-grid{grid-template-columns:minmax(0,1fr)}}
+.pfs-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:border-color .13s,box-shadow .13s}
+.pfs-card:hover{border-color:var(--teal-dim);box-shadow:0 0 0 1px rgba(20,184,166,.16)}
+.pfs-hd{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--border)}
+.pfs-hd .gl{width:15px;height:15px;color:var(--text-dim);flex-shrink:0}
+.pfs-dot{width:10px;height:10px;border-radius:50%;border:2px solid;flex-shrink:0}
+.pfs-dot.red{border-color:var(--red)}.pfs-dot.orange{border-color:var(--orange)}
+.pfs-dot.yellow{border-color:var(--yellow)}.pfs-dot.green{border-color:var(--green)}
+.pfs-nm{font-size:13px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pfs-logo{margin-left:auto;flex-shrink:0;display:flex;align-items:center;opacity:.95}
+.pfs-body{display:grid;grid-template-columns:1fr 1fr;flex:1}
+.pfs-cell{padding:10px 13px 8px;min-width:0}
+.pfs-cell+.pfs-cell{border-left:1px solid var(--border)}
+.pfs-kv{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;row-gap:1px}
+.pfs-k{font-size:11.5px;color:var(--text-dim);white-space:nowrap}
+.pfs-v{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:500;color:var(--text);line-height:1.25;letter-spacing:-.02em}
+.pfs-u{font-size:11px;color:var(--text-dim)}
+.pfs-sp{margin-top:5px;height:34px}
+.pfs-sp svg{display:block;width:100%;height:34px}
+.pfs-err{grid-column:1/-1;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;align-items:center}
+.pfs-err .el{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:11px 13px}
+.pfs-err .er{padding:8px 13px}
+.pfs-err .er svg{display:block;width:100%;height:26px}
+.pfs-err .pfs-v.zero{color:var(--text-dim)}
+/* list view */
+.pfs-spcell{width:110px}.pfs-spcell svg{display:block;width:100%;height:22px}
+
+/* ---- APM ▸ Services ▸ <service> detail (mirrors the live service page) ---- */
+.svd-hd{display:flex;align-items:center;gap:8px;height:46px;padding:0 14px;border-bottom:1px solid var(--border-soft);margin:-12px -14px 0}
+.svd-back{width:22px;height:22px;display:grid;place-items:center;border:none;background:none;color:var(--text-dim);cursor:pointer;border-radius:4px;padding:0;flex-shrink:0}
+.svd-back:hover{background:var(--hover);color:var(--text)}
+.svd-back svg{width:15px;height:15px}
+.svd-gl{width:17px;height:17px;color:var(--text-dim);flex-shrink:0}
+.svd-parent{font-size:12.5px;color:var(--text-dim)}
+.svd-sep{width:1px;height:16px;background:var(--border);margin:0 4px;flex-shrink:0}
+.svd-name{font-size:15px;color:var(--text);font-weight:600}
+.svd-logo{display:flex;align-items:center;margin-left:2px}
+.svd-when{display:flex;align-items:center;gap:13px;margin-left:auto;flex-shrink:0}
+.svd-tr{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:5px;overflow:hidden;height:29px;background:var(--panel-2)}
+.svd-tr b{background:var(--card-head);color:var(--text);font-weight:600;font-size:11.5px;padding:0 10px;display:flex;align-items:center;border-right:1px solid var(--border)}
+.svd-tr span{font-size:12px;color:var(--text-dim);padding:0 13px;display:flex;align-items:center}
+.svd-dates{font-size:10.5px;color:var(--muted);line-height:1.55;text-align:right;white-space:nowrap}
+.svd-tabs{display:flex;gap:2px;padding:0 14px;border-bottom:1px solid var(--border-soft);margin:0 -14px 13px;flex-wrap:wrap}
+.svd-tabs button{background:none;border:none;padding:10px 12px;font-size:12.8px;font-weight:500;color:var(--text-dim);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.svd-tabs button:hover{color:var(--text)}
+.svd-tabs button.on{color:var(--text);border-bottom-color:var(--teal)}
+.svd-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+@media(max-width:1460px){.svd-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.svd-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.svd-kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.svd-kpi .t{font-size:12.5px;color:var(--text);padding:10px 13px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svd-kpi .b{flex:1;display:flex;align-items:baseline;padding:20px 13px 22px;min-height:74px}
+.svd-kpi .n{font-family:'JetBrains Mono',monospace;font-size:33px;font-weight:500;color:var(--text);letter-spacing:-.035em;line-height:1}
+.svd-kpi .n.red{color:var(--red)}
+.svd-kpi .u{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-dim);margin-left:1px}
+.svd-c3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+@media(max-width:1180px){.svd-c3{grid-template-columns:1fr}}
+.svd-panel{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:12px}
+.svd-panel:first-child{margin-top:0}
+.svd-panel>.h{font-size:12.5px;color:var(--text);padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.svd-panel>.p{padding:11px 12px 12px}
+.svd-panel svg.ch{display:block;width:100%;height:auto}
+.svd-leg{display:flex;flex-wrap:wrap;gap:5px 15px;font-size:10.5px;color:var(--text-dim);padding:0 2px}
+.svd-leg i{display:inline-block;width:13px;height:2.5px;vertical-align:3.5px;margin-right:6px;border-radius:2px}
+.svd-map{position:relative;background:var(--card);padding:4px 0 10px}
+.svd-map svg.mp{display:block;width:100%;height:auto}
+.svd-zoom{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;align-items:center;gap:9px}
+.svd-pad{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);background:var(--panel-2);display:grid;place-items:center;color:var(--text-dim)}
+.svd-pad svg{width:15px;height:15px}
+.svd-zb{width:22px;height:22px;border:none;background:none;color:var(--text-dim);display:grid;place-items:center;cursor:default;padding:0}
+.svd-zb svg{width:14px;height:14px}
+.svd-slider{width:2px;height:52px;background:var(--border);position:relative;border-radius:2px}
+.svd-slider i{position:absolute;left:-3.5px;top:22px;width:9px;height:9px;border-radius:50%;background:var(--text-dim)}
+.svd-stub{text-align:center;padding:52px 20px;color:var(--muted)}
+.svd-stub .ti{font-size:14px;color:var(--text-dim);margin-bottom:8px}
+.svd-stub p{max-width:60ch;margin:0 auto;font-size:11.5px;line-height:1.75}
+/* Profiling tab — hosts the profiling flow; the service header already gives a way back */
+#svdProf{margin-top:-2px}
+#svdProf>#pfv-detail>.pf-back{display:none}
 </style>
 <div class="pf-tip" id="pfTip"></div>
 <script>
@@ -2937,7 +3056,8 @@ document.addEventListener('click', e=>{
 (function(){
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function rng(seed){let s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}}
-const ST={pv:'list',apm:'profiling',ct:'line',ct2:'line',split:'proc',sig:'rt',sigView:0,avct:'line'};
+const ST={pv:'list',apm:'profiling',ct:'line',ct2:'line',split:'proc',sig:'rt',sigView:0,avct:'line',
+  svcView:'grid',svcQ:'',sv:'grid',svc:'javaDistributed',svcTab:'overview'};
 
 /* ---- live-grounded data (live APM instance /apm/services · build 8.2.6) ---- */
 const PROCS=[
@@ -2967,6 +3087,274 @@ const SIG={
 function mkS(seed,n,base,amp,spike){const r=rng(seed);const a=[];for(let i=0;i<n;i++){let v=base+Math.sin(i/3)*amp*.3+(r()-.5)*amp;if(spike&&i===Math.floor(n*.62))v+=amp*2.4;a.push(Math.max(2,v));}return a;}
 function chart(box,series,type,h){h=h||210;const W=1000,pad=8;const all=series.flatMap(s=>s.data);const max=Math.max(...all)*1.12;const n=series[0].data.length;const cw=(W-pad*2)/(n-1);let svg='<svg viewBox="0 0 '+W+' '+h+'" preserveAspectRatio="none" style="height:'+h+'px;width:100%;display:block">';for(let g=0;g<=4;g++){const y=pad+(h-pad*2)*g/4;svg+='<line x1="'+pad+'" y1="'+y+'" x2="'+(W-pad)+'" y2="'+y+'" stroke="#131f31" stroke-width="1"/>';}const X=i=>pad+i*cw,Y=v=>h-pad-(v/max)*(h-pad*2);series.forEach((s,si)=>{if(type==='bar'){const bw=Math.max(2,cw*.5/series.length);s.data.forEach((v,i)=>{svg+='<rect x="'+(X(i)+si*bw-(series.length*bw)/2)+'" y="'+Y(v)+'" width="'+bw+'" height="'+(h-pad-Y(v))+'" fill="'+s.color+'" opacity=".85" rx="1"/>';});}else{let d='M'+s.data.map((v,i)=>X(i)+','+Y(v)).join(' L');if(type==='area')svg+='<path d="'+d+' L'+X(n-1)+','+(h-pad)+' L'+X(0)+','+(h-pad)+' Z" fill="'+s.color+'" opacity=".13"/>';svg+='<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round"/>';}});svg+='</svg>';box.innerHTML=svg;}
 
+/* ================= APM ▸ Services tab (mirrors the LIVE 8.2.6 grid) =================
+   9 services + severities + Response Time / Throughput / Error Count sampled from the
+   live instance's /apm/services card grid. Sparkline shapes are seeded (rng) so they
+   render identically every load. `ra`/`ta` tune each card's curve amplitude. */
+const APMSVC=[
+ {n:'javaDistributed',     tech:'java',sev:'orange',rt:'14744',  tp:'2', err:83,  s:11,ra:26,ta:58},
+ {n:'nodeDistributedApp',  tech:'node',sev:'orange',rt:'1456',   tp:'24',err:1287,s:23,ra:20,ta:42},
+ {n:'PHPApp',              tech:'php', sev:'orange',rt:'124.675',tp:'35',err:0,   s:37,ra:30,ta:34},
+ {n:'NodeApp',             tech:'node',sev:'red',   rt:'123.282',tp:'11',err:84,  s:41,ra:36,ta:26},
+ {n:'pythonDistributedApp',tech:'py',  sev:'yellow',rt:'76.909', tp:'9', err:0,   s:53,ra:28,ta:22},
+ {n:'DotnetApp',           tech:'net', sev:'orange',rt:'50.336', tp:'6', err:0,   s:61,ra:34,ta:40},
+ {n:'java-app@k8s',        tech:'java',sev:'orange',rt:'6.593',  tp:'12',err:0,   s:73,ra:30,ta:3},
+ {n:'python-app@k8s',      tech:'py',  sev:'orange',rt:'1.146',  tp:'11',err:0,   s:83,ra:24,ta:46},
+ {n:'JavaApp',             tech:'java',sev:'red',   rt:'0.576',  tp:'7', err:0,   s:97,ra:26,ta:50}
+];
+const PFSTECH={java:'Java',node:'Node.js',php:'PHP',py:'Python',net:'.NET'};
+const PFSGLOBE='<svg class="gl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.7 2.8 2.7 15.2 0 18M12 3c-2.7 2.8-2.7 15.2 0 18"/></svg>';
+/* small brand marks — inline so the file stays self-contained */
+const PFSLOGO={
+ java:'<svg viewBox="1.5 3 16 15" width="20" height="19" fill="#e76f00"><path d="M10.9 4c-1.9 1.4-.2 2.6.4 3.4.5.7.3 1.4-.4 2 1.9-1 2.7-2.3 1.6-3.5-.9-1-1.5-1.3-1.6-1.9z"/><path d="M13.9 8.5c1.3-.9 1.9-2 .6-3.4-.5-.6-.9-1.2-.7-1.9-1.4 1.2-.7 2 .1 2.9.7.8.8 1.5 0 2.4z"/><path d="M8.6 12.5c-1.4.4-.3.9.5 1 2.2.4 5.4.3 6.6-.1.4-.1.7-.3 1-.5 0 0-.6.2-1 .3-2 .4-5.7.3-6.4-.1-.5-.2.3-.5.8-.6l-1.5.0z"/><path d="M7.9 10.4c-1.1.6-.1 1.3 1.8 1.5 2.3.2 4.7.1 5.8-.4 0 0-.5.3-1 .4-2.3.5-5.5.3-6.1-.2-.4-.3.2-.6.7-.8l-1.2-.5z"/><path d="M17.2 14.6s.7.6-.7 1c-2.6.8-11 1.1-13.4 0-.8-.4.8-.9 1.3-1 .5-.1.8-.1.8-.1-.9-.7-6 1.4-2.6 2 9.2 1.5 16.8-.7 14.6-1.9z"/><path d="M9.7 16.8c-1.2.1-2 .1-2 .1s.4.3 1.8.5c4.3.5 7.9-.2 7.9-.2s-.5.3-1 .5c2.2-.6.1-1.3-1.6-1-1.5.2-4.3.5-5.1.1z"/></svg>',
+ node:'<svg viewBox="0 0 24 24" width="17" height="17"><path d="M12 1.9 3.3 6.9v10.2L12 22.1l8.7-5V6.9L12 1.9z" fill="#83cd29"/><text x="12" y="16.1" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="10" font-weight="800" fill="#0b1627">n</text></svg>',
+ php:'<svg viewBox="0 0 34 18" width="24" height="13"><ellipse cx="17" cy="9" rx="17" ry="9" fill="#6181b6"/><ellipse cx="17" cy="9" rx="15.4" ry="7.6" fill="#8892bf"/><text x="17" y="12.4" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="9.4" font-weight="700" fill="#0b1024" font-style="italic">php</text></svg>',
+ py:'<svg viewBox="0 0 32 32" width="17" height="17"><path d="M15.9 2c-1.3 0-2.6.1-3.7.3-3.3.6-3.9 1.8-3.9 4v2.9h7.8v1H5.2c-2.2 0-4.2 1.3-4.8 3.9-.7 2.9-.7 4.7 0 7.7.5 2.3 1.8 3.9 4 3.9h2.7v-3.5c0-2.5 2.2-4.7 4.8-4.7h7.7c2.1 0 3.8-1.7 3.8-3.8V6.3c0-2-1.7-3.6-3.8-3.9-1.3-.3-2.6-.4-3.7-.4zm-4.2 2.4c.8 0 1.4.7 1.4 1.5s-.6 1.4-1.4 1.4-1.4-.6-1.4-1.4.6-1.5 1.4-1.5z" fill="#3776ab"/><path d="M24.6 11.2v3.4c0 2.6-2.2 4.8-4.8 4.8h-7.7c-2.1 0-3.8 1.8-3.8 3.8v7.2c0 2 1.8 3.2 3.8 3.8 2.4.7 4.7.8 7.7 0 1.9-.5 3.8-1.6 3.8-3.8v-2.9h-7.7v-1h11.5c2.2 0 3.1-1.6 3.8-3.9.8-2.4.8-4.7 0-7.7-.5-2.2-1.6-3.9-3.8-3.9h-2.8zm-4.3 18.6c.8 0 1.4.6 1.4 1.4s-.6 1.5-1.4 1.5-1.4-.7-1.4-1.5.6-1.4 1.4-1.4z" fill="#ffd43b"/></svg>',
+ net:'<svg viewBox="0 0 34 22" width="22" height="15" fill="none" stroke="#5b9ad6" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 18V5l9 13V5"/><path d="M16.5 15.5c1.8-7 5.6-8.6 8.2-4.6 1.2 1.9 3 1.7 4.3-1.2"/></svg>'
+};
+/* smooth seeded area sparkline (card metric panels) */
+function pfsSpark(data,color,gid){
+  const W=300,H=40,p=2,n=data.length,cw=(W-p*2)/(n-1);
+  const max=Math.max.apply(null,data)*1.28||1;
+  const X=i=>p+i*cw,Y=v=>H-p-(v/max)*(H-p*2);
+  let d='M'+X(0).toFixed(1)+','+Y(data[0]).toFixed(1);
+  for(let i=0;i<n-1;i++){const x1=X(i),y1=Y(data[i]),x2=X(i+1),y2=Y(data[i+1]),mx=((x1+x2)/2).toFixed(1);
+    d+=' C'+mx+','+y1.toFixed(1)+' '+mx+','+y2.toFixed(1)+' '+x2.toFixed(1)+','+y2.toFixed(1);}
+  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none"><defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'
+    +'<stop offset="0" stop-color="'+color+'" stop-opacity=".45"/><stop offset="1" stop-color="'+color+'" stop-opacity=".02"/></linearGradient></defs>'
+    +'<path d="'+d+' L'+X(n-1).toFixed(1)+','+H+' L'+X(0).toFixed(1)+','+H+' Z" fill="url(#'+gid+')"/>'
+    +'<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>';
+}
+/* error-count bar sparkline */
+function pfsBars(data,color,h){h=h||26;const W=300,n=data.length,step=W/n,bw=step*.62;
+  const max=Math.max.apply(null,data)*1.08||1;let s='';
+  data.forEach((v,i)=>{const bh=Math.max(2,(v/max)*(h-1));
+    s+='<rect x="'+(i*step+(step-bw)/2).toFixed(1)+'" y="'+(h-bh).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="'+color+'"/>';});
+  return '<svg viewBox="0 0 '+W+' '+h+'" preserveAspectRatio="none">'+s+'</svg>';}
+function pfsRows(){const q=(ST.svcQ||'').trim().toLowerCase();
+  return q?APMSVC.filter(s=>s.n.toLowerCase().indexOf(q)>=0||PFSTECH[s.tech].toLowerCase().indexOf(q)>=0):APMSVC;}
+function pfsSeries(s){return{rt:mkS(s.s,26,62,s.ra),tp:mkS(s.s+7,26,42,s.ta),er:mkS(s.s+13,15,46,44)};}
+function renderApmSvc(){
+  const box=$('#pfsGrid'),rows=pfsRows();
+  if(!rows.length){box.className='pf-card';box.innerHTML='<div class="pf-empty">No service matches “'+(ST.svcQ||'')+'”</div>';return;}
+  if(ST.svcView==='list'){
+    box.className='pf-card';
+    box.innerHTML='<table class="pf-grid"><thead><tr><th>Service</th><th>Technology</th><th>Response time</th><th></th><th>Throughput</th><th></th><th>Error count</th><th></th></tr></thead><tbody>'
+      +rows.map((s,i)=>{const d=pfsSeries(s);return '<tr class="clk" data-svc="'+s.n+'">'
+        +'<td><span class="pf-svc"><span class="pfs-dot '+s.sev+'"></span><b>'+s.n+'</b></span></td>'
+        +'<td>'+PFSTECH[s.tech]+'</td>'
+        +'<td class="pf-mono" style="color:var(--text)">'+s.rt+' <span class="pfs-u">ms</span></td>'
+        +'<td class="pfs-spcell">'+pfsSpark(d.rt,'#14b8a6','pfsl'+i+'r')+'</td>'
+        +'<td class="pf-mono" style="color:var(--text)">'+s.tp+' <span class="pfs-u">tpm</span></td>'
+        +'<td class="pfs-spcell">'+pfsSpark(d.tp,'#f47c22','pfsl'+i+'t')+'</td>'
+        +'<td class="pf-mono" style="color:'+(s.err?'var(--red)':'var(--muted)')+'">'+s.err+'</td>'
+        +'<td class="pfs-spcell">'+(s.err?pfsBars(d.er,'#ec5b5b',22):'')+'</td></tr>';}).join('')
+      +'</tbody></table>';
+    return;
+  }
+  box.className='pfs-grid';
+  box.innerHTML=rows.map((s,i)=>{const d=pfsSeries(s);
+    return '<div class="pfs-card" data-svc="'+s.n+'" title="Open '+s.n+' in Profiling ▸ Process details">'
+      +'<div class="pfs-hd">'+PFSGLOBE+'<span class="pfs-dot '+s.sev+'"></span><span class="pfs-nm">'+s.n+'</span>'
+        +'<span class="pfs-logo">'+(PFSLOGO[s.tech]||'')+'</span></div>'
+      +'<div class="pfs-body">'
+        +'<div class="pfs-cell"><div class="pfs-kv"><span class="pfs-k">Response Time</span>'
+          +'<span><span class="pfs-v">'+s.rt+'</span> <span class="pfs-u">ms</span></span></div>'
+          +'<div class="pfs-sp">'+pfsSpark(d.rt,'#14b8a6','pfsc'+i+'r')+'</div></div>'
+        +'<div class="pfs-cell"><div class="pfs-kv"><span class="pfs-k">Throughput</span>'
+          +'<span><span class="pfs-v">'+s.tp+'</span> <span class="pfs-u">tpm</span></span></div>'
+          +'<div class="pfs-sp">'+pfsSpark(d.tp,'#f47c22','pfsc'+i+'t')+'</div></div>'
+        +'<div class="pfs-err"><div class="el"><span class="pfs-k">Error Count</span>'
+          +'<span class="pfs-v'+(s.err?'':' zero')+'">'+s.err+'</span></div>'
+          +'<div class="er">'+(s.err?pfsBars(d.er,'#ec5b5b',26):'')+'</div></div>'
+      +'</div></div>';}).join('');
+}
+
+/* ============ APM ▸ Services ▸ <service> detail (live page + NEW Profiling tab) ============
+   Header / 6 KPI cards / 3 charts / Service Map reproduce the live 8.2.6 service page.
+   `Profiling` is the proposed new tab — everything in it is profiler-backed. */
+const SVCDET={
+ 'javaDistributed':     {rt:['15.82','Sec'],p99:['0','ms'],   req:'150', err:'77',  errp:['52','%'],  dn:['nodeDistributedApp','pythonDistributedApp']},
+ 'nodeDistributedApp':  {rt:['1.45','Sec'], p99:['3.28','Sec'],req:'1440',err:'1287',errp:['89.4','%'],dn:['pythonDistributedApp']},
+ 'PHPApp':              {rt:['124.675','ms'],p99:['286.4','ms'],req:'2100',err:'0',  errp:['0','%'],   dn:[]},
+ 'NodeApp':             {rt:['123.282','ms'],p99:['412.6','ms'],req:'660', err:'84', errp:['12.7','%'],dn:['DotnetApp']},
+ 'pythonDistributedApp':{rt:['76.909','ms'],p99:['198.3','ms'],req:'540', err:'0',  errp:['0','%'],   dn:[]},
+ 'DotnetApp':           {rt:['50.336','ms'],p99:['141.9','ms'],req:'360', err:'0',  errp:['0','%'],   dn:[]},
+ 'java-app@k8s':        {rt:['6.593','ms'], p99:['19.4','ms'], req:'720', err:'0',  errp:['0','%'],   dn:['python-app@k8s']},
+ 'python-app@k8s':      {rt:['1.146','ms'], p99:['4.82','ms'], req:'660', err:'0',  errp:['0','%'],   dn:[]},
+ 'JavaApp':             {rt:['0.576','ms'], p99:['2.14','ms'], req:'420', err:'0',  errp:['0','%'],   dn:[]}
+};
+const SVCTABS=[['overview','Overview'],['transactions','Transactions'],['endpoint','API Endpoint'],['database','Database'],['jvm','JVM'],['errtrack','Error Tracker'],['logs','Logs'],['profiling','Profiling']];
+const SVCSTUB={
+ transactions:'The live per-transaction grid — transaction name, calls, average &amp; p99 duration, failure rate — with drill-down into the matching traces.',
+ endpoint:'Live throughput, latency and error breakdown per HTTP route served by this service.',
+ database:'Live database statement performance captured from spans: calls, average time and the slowest statements.',
+ jvm:'Live runtime metrics reported by the agent — heap &amp; non-heap memory, threads, class loading and GC counts.',
+ errtrack:'Live exceptions / 4xx / 5xx for this service, grouped by error type and linked to traces.',
+ logs:'Live log lines correlated to this service’s traces.'
+};
+const SEVHEX={red:'#f2504b',orange:'#fb923c',yellow:'#eab308',green:'#22c55e'};
+function svdFit(a,lo,hi){const mn=Math.min.apply(null,a),mx=Math.max.apply(null,a),r=(mx-mn)||1;return a.map(v=>lo+(v-mn)/r*(hi-lo));}
+/* round a value range to 3–5 even, human-readable axis steps (1/2/2.5/5 × 10^n) */
+function svdNice(lo,hi){
+  const span=(hi-lo)||1,c=[];
+  [1,2,2.5,5].forEach(m=>{for(let e=-3;e<=7;e++)c.push(m*Math.pow(10,e));});
+  c.sort((a,b)=>a-b);
+  let st=c[c.length-1],n=Math.ceil(span/st);
+  for(let i=0;i<c.length;i++){const k=Math.ceil(span/c[i]);if(k>=3&&k<=5){st=c[i];n=k;break;}}
+  const l=Math.floor(lo/st)*st,t=[];
+  for(let i=0;i<=n;i++)t.push(+(l+st*i).toFixed(4));
+  return{lo:+l.toFixed(4),hi:+(l+st*n).toFixed(4),ticks:t};}
+/* axis chart — line(s) or stacked bars, with y ticks + x time labels */
+function svdChart(c){
+  const W=c.W||520,H=c.h||198,L=c.L||40,R=10,T=10,B=26,mn=c.min||0,mx=c.max;
+  const Y=v=>H-B-((v-mn)/(mx-mn))*(H-T-B);
+  let s='<svg class="ch" viewBox="0 0 '+W+' '+H+'">';
+  (c.ticks||[]).forEach(t=>{const y=Y(t);
+    s+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+'" stroke="#182740" stroke-width="1"/>'
+      +'<text x="'+(L-7)+'" y="'+(y+3.3).toFixed(1)+'" text-anchor="end" font-size="9" fill="#5272a0" font-family="Inter,sans-serif">'+c.fmt(t)+'</text>';});
+  if(c.type==='stack'){
+    const n=c.bars.length,step=(W-L-R)/n,bw=Math.min(14,step*.52);
+    c.bars.forEach((b,i)=>{const x=L+i*step+(step-bw)/2,yb=Y(b[0]),yt=Y(b[0]+b[1]);
+      if(b[1]>0)s+='<rect x="'+x.toFixed(1)+'" y="'+yt.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(yb-yt).toFixed(1)+'" fill="#ec5b5b"/>';
+      s+='<rect x="'+x.toFixed(1)+'" y="'+yb.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(H-B-yb).toFixed(1)+'" fill="#2fb3a0"/>';});
+  }else{
+    (c.series||[]).forEach(se=>{const n=se.data.length,px=i=>L+i*(W-L-R)/(n-1);
+      let d='M'+px(0).toFixed(1)+','+Y(se.data[0]).toFixed(1);
+      for(let i=0;i<n-1;i++){const x1=px(i),y1=Y(se.data[i]),x2=px(i+1),y2=Y(se.data[i+1]),m=((x1+x2)/2).toFixed(1);
+        d+=' C'+m+','+y1.toFixed(1)+' '+m+','+y2.toFixed(1)+' '+x2.toFixed(1)+','+y2.toFixed(1);}
+      s+='<path d="'+d+'" fill="none" stroke="'+se.color+'" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>';});
+  }
+  s+='<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#1d2a3e" stroke-width="1"/>';
+  const xl=c.xl||[];
+  xl.forEach((lb,i)=>{const x=L+14+(W-L-R-28)*(xl.length<2?.5:i/(xl.length-1));
+    s+='<text x="'+x.toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="9" fill="#5272a0" font-family="Inter,sans-serif">'+lb+'</text>';});
+  return s+'</svg>';
+}
+/* service map — selected service + its downstream chain */
+function svdNodeSvg(x,y,color,label){
+  return '<circle cx="'+x+'" cy="'+y+'" r="24" fill="#0d1b2f" stroke="'+color+'" stroke-width="2.6"/>'
+   +'<g transform="translate('+(x-13)+','+(y-13)+') scale(1.083)" fill="none" stroke="#b9cbe2" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.7 2.8 2.7 15.2 0 18M12 3c-2.7 2.8-2.7 15.2 0 18"/></g>'
+   +'<text x="'+x+'" y="'+(y+43)+'" text-anchor="middle" font-size="13" fill="#8a9ab0" font-family="Inter,sans-serif">'+label+'</text>';
+}
+function svdMap(name){
+  const sev=n=>{const f=APMSVC.filter(s=>s.n===n)[0];return SEVHEX[f?f.sev:'orange'];};
+  const dn=(SVCDET[name]||{}).dn||[];
+  let s='<svg class="mp" viewBox="0 0 1120 '+(dn.length?250:190)+'"><defs><marker id="svdArw" markerWidth="8" markerHeight="8" refX="7.2" refY="3" orient="auto"><path d="M0 0L7 3L0 6z" fill="#456a92"/></marker></defs>';
+  if(!dn.length){
+    s+=svdNodeSvg(560,74,sev(name),name);
+    return s+'<text x="560" y="146" text-anchor="middle" font-size="11.5" fill="#5272a0" font-family="Inter,sans-serif">No downstream dependency detected in this window</text></svg>';
+  }
+  s+=svdNodeSvg(190,168,sev(name),name);
+  if(dn.length>0){
+    s+='<path d="M216 168H520" stroke="#33506f" stroke-width="1.6" fill="none" marker-end="url(#svdArw)"/>';
+    s+=svdNodeSvg(560,168,sev(dn[0]),dn[0]);
+  }
+  if(dn.length>1){
+    s+='<path d="M586 168H700Q730 168 730 138V96Q730 66 760 66H860" stroke="#33506f" stroke-width="1.6" fill="none" marker-end="url(#svdArw)"/>';
+    s+=svdNodeSvg(900,66,sev(dn[1]),dn[1]);
+  }
+  return s+'</svg>';
+}
+const SVDZOOM='<div class="svd-zoom"><div class="svd-pad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 6l2.5 3h-5L12 6zM12 18l-2.5-3h5L12 18zM6 12l3-2.5v5L6 12zM18 12l-3 2.5v-5L18 12z" fill="currentColor" stroke="none"/></svg></div>'
+ +'<button class="svd-zb" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>'
+ +'<button class="svd-zb" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>'
+ +'<div class="svd-slider"><i></i></div>'
+ +'<button class="svd-zb" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button></div>';
+/* ---- overview tab ---- */
+function svdOverview(s){
+  const d=SVCDET[s.n]||{},sd=s.s;
+  const kpi=(t,v,u,red)=>'<div class="svd-kpi"><div class="t">'+t+'</div><div class="b"><span class="n'+(red?' red':'')+'">'+v+'</span>'+(u?'<span class="u">'+u+'</span>':'')+'</div></div>';
+  const XL=['21:40','21:50','22:00','22:10','22:20'];
+  /* response time — avg / p99 / p50, in seconds, y-max 30s like the live chart */
+  /* the axis follows the service's own latency scale — seconds for javaDistributed, ms for the rest */
+  const rtMs=parseFloat(d.rt[0])*(d.rt[1]==='Sec'?1000:1);
+  const p9Ms=Math.max(parseFloat(d.p99[0])*(d.p99[1]==='Sec'?1000:1),rtMs*1.3);
+  const avg=svdFit(mkS(sd+3,14,60,30),rtMs*.6,rtMs*1.3);
+  const p99=svdFit(mkS(sd+5,14,60,30),p9Ms*.78,p9Ms*1.22);
+  const p50=svdFit(mkS(sd+9,14,60,10),rtMs*.04,rtMs*.11);
+  const nrt=svdNice(0,Math.max.apply(null,p99)*1.14);
+  const inS=nrt.hi>=1000;
+  const rtChart=svdChart({series:[{data:p99,color:'#fb923c'},{data:avg,color:'#2fb3a0'},{data:p50,color:'#a855f7'}],
+    ticks:nrt.ticks,max:nrt.hi,fmt:v=>v?(inS?(+(v/1000).toFixed(2))+' s':(+v.toFixed(1))+' ms'):'0',xl:XL,L:44});
+  /* throughput — non-zero baseline with round axis steps, like the live chart */
+  const tpv=parseFloat(s.tp)||2, nr=svdNice(Math.max(0,tpv*.8),tpv*1.55);
+  const tps=svdFit(mkS(sd+11,14,60,40),nr.lo+(nr.hi-nr.lo)*.16,nr.lo+(nr.hi-nr.lo)*.84);
+  const tpChart=svdChart({series:[{data:tps,color:'#2fb3a0'}],ticks:nr.ticks,min:nr.lo,max:nr.hi,
+    fmt:v=>''+(+v.toFixed(2)),xl:XL,L:44});
+  /* requests & errors — stacked */
+  /* red share of each bar tracks the service's real error percentage */
+  const ep=parseFloat((d.errp||['0'])[0])||0, ratio=ep>=95?6:ep/(100-ep);
+  const base=svdFit(mkS(sd+13,11,50,30),3,8), wob=svdFit(mkS(sd+17,11,50,30),.78,1.22);
+  const bars=base.map((v,i)=>[+v.toFixed(1),ep?+(v*ratio*wob[i]).toFixed(1):0]);
+  const top=Math.max.apply(null,bars.map(b=>b[0]+b[1]));
+  const nre=svdNice(0,top*1.06);
+  const reChart=svdChart({type:'stack',bars:bars,ticks:nre.ticks,max:nre.hi,
+    fmt:v=>''+(+v.toFixed(1)),xl:['21:30','21:40','21:50','22:00','22:10','22:20'],L:34});
+  return '<div class="svd-kpis">'
+    +kpi('Response Time',d.rt[0],d.rt[1])+kpi('P99 Response Time',d.p99[0],d.p99[1])
+    +kpi('Total Requests',d.req,'')+kpi('Request Throughput',s.tp,'tpm')
+    +kpi('Error Count',d.err,'',parseFloat(d.err)>0)+kpi('Error Percentage',d.errp[0],d.errp[1])
+    +'</div>'
+    +'<div class="svd-c3">'
+      +'<div class="svd-panel" style="margin-top:0"><div class="h">Response Time</div><div class="p">'+rtChart
+        +'<div class="svd-leg"><span><i style="background:#2fb3a0"></i>service.trace.duration.us.avg</span>'
+        +'<span><i style="background:#fb923c"></i>service.trace.duration.p99.us.avg</span>'
+        +'<span><i style="background:#a855f7"></i>service.trace.duration.p50.us.avg</span></div></div></div>'
+      +'<div class="svd-panel" style="margin-top:0"><div class="h">Request Throughput</div><div class="p">'+tpChart+'</div></div>'
+      +'<div class="svd-panel" style="margin-top:0"><div class="h">Requests &amp; Errors</div><div class="p">'+reChart
+        +'<div class="svd-leg"><span><i style="background:#2fb3a0"></i>Requests</span><span><i style="background:#ec5b5b"></i>Errors</span></div></div></div>'
+    +'</div>'
+    +'<div class="svd-panel"><div class="h">Service Map</div><div class="svd-map">'+svdMap(s.n)+SVDZOOM+'</div></div>';
+}
+/* ---- the NEW Profiling tab: hosts the real profiling flow, starting at Process details ---- */
+const PFFLOW=['detail','method','services','monitor'];
+/* the flow views live in #pfBody for the top-level APM ▸ Profiling tab and are moved
+   into the service page while its Profiling tab is open — one copy, two entry points. */
+function svdProfHome(){const host=$('#pfBody');if(!host)return;
+  PFFLOW.forEach(k=>{const el=$('#pfv-'+k);
+    if(el&&el.parentNode!==host){el.classList.remove('on');host.appendChild(el);}});}
+function svdProfMount(){const host=$('#svdProf');if(!host)return;
+  PFFLOW.forEach(k=>{const el=$('#pfv-'+k);if(el)host.appendChild(el);});
+  goSvcProf('detail');}
+/* in-tab navigator — same screens as go(), but scoped to the service page */
+function goSvcProf(p){if(p==='list')p='detail';ST.tpv=p;
+  PFFLOW.forEach(k=>{const el=$('#pfv-'+k);if(el)el.classList.toggle('on',k===p);});
+  if(p==='detail')renderDetail();
+  if(p==='services')renderAttached();
+  if(p==='method')renderMethod();
+  const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
+/* one dispatcher for every data-goto / row click in the flow */
+function pfGo(p){if(ST.apm==='services'&&ST.sv==='detail'&&ST.svcTab==='profiling')goSvcProf(p);else go(p);}
+function svdProfiling(){return '<div id="svdProf"></div>';}
+function svdStub(k,label){
+  return '<div class="svd-panel" style="margin-top:0"><div class="svd-stub"><div class="ti">'+label+'</div>'
+    +'<p>'+(SVCSTUB[k]||'')+'</p><p style="margin-top:10px"><span class="avl">Live in APM today</span> '
+    +'— this prototype focuses on the new <b style="color:var(--teal)">Profiling</b> tab, so this tab mirrors the live current state.</p></div></div>';
+}
+function renderSvcDetail(){
+  svdProfHome();                                   /* pull the flow views out before wiping #svdBody */
+  const s=APMSVC.filter(x=>x.n===ST.svc)[0]||APMSVC[0];
+  $('#svdName').textContent=s.n;
+  $('#svdDot').className='pfs-dot '+s.sev;
+  $('#svdLogo').innerHTML=PFSLOGO[s.tech]||'';
+  $('#svdTabs').innerHTML=SVCTABS.map(t=>'<button data-st="'+t[0]+'"'+(t[0]===ST.svcTab?' class="on"':'')+'>'+t[1]
+    +(t[0]==='profiling'?'<span class="pf-new">NEW</span>':'')+'</button>').join('');
+  const b=$('#svdBody');
+  if(ST.svcTab==='overview')b.innerHTML=svdOverview(s);
+  else if(ST.svcTab==='profiling'){b.innerHTML=svdProfiling();svdProfMount();}
+  else b.innerHTML=svdStub(ST.svcTab,(SVCTABS.filter(t=>t[0]===ST.svcTab)[0]||['',''])[1]);
+}
+/* the service page replaces the APM head + tab bar, exactly like the live product */
+function svdChrome(on){const ph=$('#view-profiling .pagehead'),tb=$('#pfApmTabs');
+  if(ph)ph.style.display=on?'none':'';if(tb)tb.style.display=on?'none':'';}
+function goSvc(sv){ST.sv=sv;svdProfHome();
+  $$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));
+  const el=$('#pfv-'+(sv==='detail'?'svcdetail':'apmsvc'));if(el)el.classList.add('on');
+  if(sv==='detail')renderSvcDetail();else renderApmSvc();
+  svdChrome(sv==='detail');setHead();
+  const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
+
 /* ---- overview ---- */
 function overviewSeries(){return[
  {name:'javaDistributed',color:'#14b8a6',data:mkS(11,60,40,16,1)},
@@ -2982,25 +3370,82 @@ function detailSeries(){if(ST.split==='svc')return[{name:'checkout',color:'#4c9b
 function renderDetailCpu(){chart($('#pfDetailCpu'),detailSeries(),ST.ct2,200);}
 function renderSignals(){const c=SIG[ST.sig];$('#pfSigView').innerHTML=c.views.map((v,i)=>'<button class="'+(i===ST.sigView?'on':'')+'">'+v+'</button>').join('');$$('#pfSigView button').forEach((b,i)=>b.addEventListener('click',()=>{ST.sigView=i;$$('#pfSigView button').forEach(x=>x.classList.remove('on'));b.classList.add('on');drawSig();}));$('#pfSigName').textContent=c.name;const av=$('#pfSigAvl');if(av)av.innerHTML=c.avail==='live'?'<span class="avl">Live · '+c.doc+'</span>':'<span class="avl no">Requires profiler</span>';drawSig();}
 function drawSig(){const c=SIG[ST.sig];const el=$('#pfSigChart');if(c.avail==='no'){el.innerHTML='<div class="sig-lock"><div class="hd"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>CPU per request — not provided by the current product</div>Per the <b>Motadata APM docs</b>, build 8.2.6 measures <b>Latency, Error&nbsp;Rate &amp; Throughput</b> at the service level — not per-request or per-method CPU. This signal needs the new <b>profiler agent</b> (code-level CPU sampling); it is shown here only as a proposed capability.</div>';return;}chart(el,[{name:'v',color:c.color,data:mkS(c.seed+ST.sigView*7,60,c.base*(1+ST.sigView*0.5),c.amp,c.spike)}],c.type,190);}
-function renderDetail(){renderDetailCpu();ST.sig='rt';ST.sigView=0;$$('#pfSigTabs button').forEach((b,i)=>b.classList.toggle('on',b.dataset.sig==='rt'));renderSignals();}
+function renderDetail(){renderProcs();renderDetailCpu();ST.sig='rt';ST.sigView=0;$$('#pfSigTabs button').forEach((b,i)=>b.classList.toggle('on',b.dataset.sig==='rt'));renderSignals();}
+
+/* ---- processes & attached services, per service ----
+   the flow is now reachable per service (Services ▸ <service> ▸ Profiling), so the
+   process grid and the attached-services list are keyed to the selected service. */
+const PROCSPEC={
+ 'javaDistributed':      {tech:'Java',   host:'aks-default-1849',p:['order-service','payment-service'],   s:['order-service','payment-service','inventory-service','notification-service']},
+ 'nodeDistributedApp':   {tech:'Node.js',host:'aks-default-2207',p:['api-gateway','queue-worker'],        s:['api-gateway','queue-worker','session-service','webhook-dispatcher']},
+ 'PHPApp':               {tech:'PHP',    host:'web-fpm-04',      p:['php-fpm · pool www','php · cli'],    s:['storefront','checkout-web','media-uploader','cron-runner']},
+ 'NodeApp':              {tech:'Node.js',host:'aks-default-1912',p:['http-server','scheduler'],           s:['http-server','scheduler','cache-warmer','report-builder']},
+ 'pythonDistributedApp': {tech:'Python', host:'aks-default-2260',p:['gunicorn · web','celery · worker'],  s:['recommendation-api','celery-worker','feature-store','batch-scorer']},
+ 'DotnetApp':            {tech:'.NET',   host:'win-app-07',      p:['w3wp · api','background-service'],   s:['billing-api','background-service','export-worker','identity-svc']},
+ 'java-app@k8s':         {tech:'Java',   host:'k8s-node-11',     p:['app · main','otel-agent'],           s:['catalog-api','search-indexer','pricing-svc','image-resizer']},
+ 'python-app@k8s':       {tech:'Python', host:'k8s-node-14',     p:['uvicorn · web','rq · worker'],       s:['ingest-api','rq-worker','etl-runner','notifier']},
+ 'JavaApp':              {tech:'Java',   host:'app-srv-02',      p:['tomcat · main','batch-runner'],      s:['legacy-web','batch-runner','soap-bridge','audit-writer']}
+};
+const PFPAL=['#8b7cf6','#f5bc18','#14b053','#4c9bff'];
+function procSpec(){const n=($('#pfDetailName')&&$('#pfDetailName').textContent||'').trim();
+  return[n,PROCSPEC[n]||PROCSPEC['javaDistributed']];}
+function svcSeed(n){const f=APMSVC.filter(x=>x.n===n)[0];return f?f.s:11;}
+function renderProcs(){
+  const box=$('#pfProcBody');if(!box)return;
+  const sp=procSpec(),name=sp[0],cfg=sp[1],r=rng(svcSeed(name)+31);
+  $('#pfProcCount').textContent=cfg.p.length;
+  box.innerHTML=cfg.p.map((pn,i)=>{
+    const gc=cfg.tech==='PHP'||cfg.tech==='Python'?'—':(2+r()*4).toFixed(1)+' %';
+    const pct=i?36+Math.round(r()*22):78+Math.round(r()*16);
+    const secs=Math.round(60+pct*8+r()*90);
+    const cons=Math.floor(secs/60)+' min '+('0'+(secs%60)).slice(-2)+' s';
+    return '<tr class="clk" data-svc="'+pn+'"><td><span class="pf-svc">'
+      +'<span style="width:16px;height:16px;border-radius:4px;background:'+PFPAL[i%4]+';display:inline-flex;align-items:center;justify-content:center;color:#0a0620;font-size:10px;font-weight:700">'+cfg.tech.charAt(0)+'</span>'
+      +'<b>'+name+' · '+pn+'</b></span>'
+      +'<div class="pf-sm pf-muted" style="margin-top:2px">'+cfg.host+' · process: <b style="color:#4c9bff">'+pn+'</b></div></td>'
+      +'<td>'+cfg.tech+'</td><td class="pf-mono">'+gc+'</td>'
+      +'<td><div class="pf-row pf-aic" style="gap:8px"><span class="pf-bar" style="flex:1;max-width:150px"><span style="width:'+pct+'%"></span></span>'
+      +'<span class="pf-mono pf-sm">'+cons+'</span></div></td><td class="pf-mono pf-muted">⌕ ⋯</td></tr>';}).join('');
+}
+function renderAttached(){
+  const box=$('#pfAttBody');if(!box)return;
+  const sp=procSpec(),cfg=sp[1],r=rng(svcSeed(sp[0])+47);
+  box.innerHTML=cfg.s.map((sn,i)=>{
+    const rpm=Math.round(90+r()*260),med=Math.round(22+r()*55);
+    const host=cfg.host.replace(/(\d+)$/,m=>(+m+(i>1?2:0)));
+    return '<tr class="clk"><td><span class="pf-svc">'
+      +'<span style="width:15px;height:15px;border-radius:4px;background:'+PFPAL[i%4]+';display:inline-flex;align-items:center;justify-content:center;color:#04121a;font-size:9px;font-weight:700">'+sn.charAt(0).toUpperCase()+'</span>'
+      +'<b style="color:#4c9bff">'+sn+'</b></span></td><td>'+cfg.tech+'</td>'
+      +'<td class="pf-mono">'+rpm+' /min</td><td class="pf-mono">'+med+' ms</td>'
+      +'<td class="pf-mono pf-muted">'+host+'</td><td class="pf-mono pf-muted">⌕ →</td></tr>';}).join('');
+}
 
 /* ---- method hotspots ---- */
 function renderMethod(){const mx=METHODS[0][1];$('#pfMethodList').innerHTML=METHODS.map(m=>'<div class="pf-crow" style="padding:7px 0;border-bottom:1px solid var(--border-soft)"><span class="nm pf-mono" style="font-size:11.5px;color:var(--text)">'+m[0]+'</span><span class="pf-bar" style="flex:0 0 160px"><span style="width:'+(m[1]/mx*100)+'%;background:'+(m[1]===mx?'var(--red)':'var(--teal)')+'"></span></span><span class="pf-mono">'+(m[1]/100).toFixed(2)+'s</span></div>').join('');}
 
 /* ---- nav ---- */
-function go(pv){ST.pv=pv;$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));const el=$('#pfv-'+pv);if(el)el.classList.add('on');if(pv==='list')renderList();if(pv==='detail')renderDetail();if(pv==='method')renderMethod();setHead();const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
+function go(pv){svdProfHome();ST.pv=pv;$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));const el=$('#pfv-'+pv);if(el)el.classList.add('on');if(pv==='list')renderList();if(pv==='detail')renderDetail();if(pv==='services')renderAttached();if(pv==='method')renderMethod();svdChrome(false);setHead();const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;}
 /* dynamic breadcrumb title in the APM header — shows where you are on every screen */
 const TABNAME={services:'Services',explorer:'Explorer',errors:'Error Tracker',compare:'Compare',profiling:'Profiling'};
 const SCRNAME={list:'',detail:'Process details',method:'Method hotspots',services:'Attached services',monitor:'Monitor'};
-function setHead(){const el=$('#pfHeadTitle');if(!el)return;const parts=['APM'];if(ST.apm!=='profiling'){parts.push(TABNAME[ST.apm]||'');}else{parts.push('Profiling');const svc=($('#pfDetailName')&&$('#pfDetailName').textContent||'').trim();if(ST.pv!=='list'&&svc)parts.push(svc);const scr=SCRNAME[ST.pv];if(scr)parts.push(scr);}el.innerHTML=parts.filter(Boolean).map((p,i)=>i?'<span class="hd-sep">▸</span><span class="hd-ctx">'+p+'</span>':p).join('');}
+function setHead(){const el=$('#pfHeadTitle');if(!el)return;const parts=['APM'];
+ if(ST.apm==='services'){parts.push('Services');if(ST.sv==='detail'){parts.push(ST.svc);
+   const t=SVCTABS.filter(x=>x[0]===ST.svcTab)[0];if(t&&t[0]!=='overview')parts.push(t[1]);}}
+ else if(ST.apm!=='profiling'){parts.push(TABNAME[ST.apm]||'');}else{parts.push('Profiling');const svc=($('#pfDetailName')&&$('#pfDetailName').textContent||'').trim();if(ST.pv!=='list'&&svc)parts.push(svc);const scr=SCRNAME[ST.pv];if(scr)parts.push(scr);}el.innerHTML=parts.filter(Boolean).map((p,i)=>i?'<span class="hd-sep">▸</span><span class="hd-ctx">'+p+'</span>':p).join('');}
 
+/* Services now renders for real (#pfv-apmsvc) — only these three are stubs */
 const STUBMSG={
- services:'This mirrors the live APM ▸ Services tab (build 8.2.6): a card grid of Response Time / Throughput / Error Count per service. The Profiling tab adds continuous CPU profiling on top of it.',
  explorer:'Explorer — the live trace / span grid with service·process·thread·code·http·db facets. The Dynatrace flow reuses these facets for outlier analysis.',
  errors:'Error Tracker — live exception / 4xx / 5xx trends. Feeds the Failure-rate signal in Profiling.',
  compare:'Compare — live two-service side-by-side. Profiling adds a differential / analysis view on top.'
 };
-function setApm(tab){ST.apm=tab;$$('#pfApmTabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.apm===tab));if(tab==='profiling'){$('#pfv-stub').classList.remove('on');go(ST.pv);}else{$$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));$('#pfv-stub').classList.add('on');$('#pfStubMsg').innerHTML=STUBMSG[tab]||'';setHead();}}
+function setApm(tab){ST.apm=tab;$$('#pfApmTabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.apm===tab));
+ if(tab==='profiling'){$('#pfv-stub').classList.remove('on');$('#pfv-apmsvc').classList.remove('on');go(ST.pv);return;}
+ $$('#view-profiling .pf-view').forEach(p=>p.classList.remove('on'));
+ const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;
+ /* Services is a real screen (mirrors the live 8.2.6 grid); the rest are stubs */
+ if(tab==='services'){goSvc(ST.sv);return;}
+ svdChrome(false);$('#pfv-stub').classList.add('on');$('#pfStubMsg').innerHTML=STUBMSG[tab]||'';setHead();}
 
 /* ---- init (idempotent) ---- */
 let wired=false;
@@ -3009,14 +3454,34 @@ window.initProfiling=function(){
   if(!wired){
     wired=true;
     $('#pfApmTabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(t)setApm(t.dataset.apm);});
-    document.addEventListener('click',e=>{const g=e.target.closest('#view-profiling [data-goto]');if(g)go(g.dataset.goto);});
-    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-detail tbody tr.clk');if(r){var pn=$('#pfDetailName'),sp=$('#pfSvcProc');if(pn&&sp)sp.textContent=pn.textContent;go('services');}});
-    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-services tbody tr.clk');if(r)go('monitor');});
+    document.addEventListener('click',e=>{const g=e.target.closest('#view-profiling [data-goto]');if(g)pfGo(g.dataset.goto);});
+    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-detail tbody tr.clk');if(r){
+      var pn=$('#pfDetailName'),sp=$('#pfSvcProc'),mp=$('#pfMethProc');
+      const lbl=(pn?pn.textContent:'')+(r.dataset.svc?' · '+r.dataset.svc:'');
+      if(sp)sp.textContent=lbl;if(mp)mp.textContent=lbl;
+      pfGo('services');}});
+    document.addEventListener('click',e=>{const r=e.target.closest('#pfv-services tbody tr.clk');if(r)pfGo('monitor');});
     $('#pfCt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.ct=b.dataset.ct;$$('#pfCt button').forEach(x=>x.classList.toggle('on',x===b));renderCpu();});
     $('#pfCt2').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.ct2=b.dataset.ct;$$('#pfCt2 button').forEach(x=>x.classList.toggle('on',x===b));renderDetailCpu();});
     $('#pfSplit').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.split=b.dataset.split;$$('#pfSplit button').forEach(x=>x.classList.toggle('on',x===b));renderDetailCpu();});
     $('#pfSigTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ST.sig=b.dataset.sig;ST.sigView=0;$$('#pfSigTabs button').forEach(x=>x.classList.toggle('on',x===b));renderSignals();});
     const fh=$('#pfFeasHide');if(fh)fh.addEventListener('click',ev=>{ev.preventDefault();$('#pfFeas').style.display='none';});
+    /* APM ▸ Services: search, card/list toggle, and click-through into Profiling */
+    $('#pfsQ').addEventListener('input',e=>{ST.svcQ=e.target.value;renderApmSvc();});
+    $('#pfsVgrid').addEventListener('click',()=>{ST.svcView='grid';$('#pfsVgrid').classList.add('on');$('#pfsVlist').classList.remove('on');renderApmSvc();});
+    $('#pfsVlist').addEventListener('click',()=>{ST.svcView='list';$('#pfsVlist').classList.add('on');$('#pfsVgrid').classList.remove('on');renderApmSvc();});
+    /* a service opens the live service page (Overview … Logs + the NEW Profiling tab) */
+    document.addEventListener('click',e=>{const c=e.target.closest('#pfv-apmsvc [data-svc]');if(!c)return;
+      ST.svc=c.dataset.svc;ST.svcTab='overview';
+      const pn=$('#pfDetailName');if(pn)pn.textContent=ST.svc;
+      goSvc('detail');});
+    $('#svdBack').addEventListener('click',()=>goSvc('grid'));
+    $('#svdTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+      ST.svcTab=b.dataset.st;renderSvcDetail();setHead();
+      const pb=$('#view-profiling .pagebody');if(pb)pb.scrollTop=0;});
+    /* Profiling tab → the deep profiling workspace, service already selected */
+    document.addEventListener('click',e=>{const b=e.target.closest('#pfv-svcdetail [data-svcgo]');if(!b)return;
+      const pn=$('#pfDetailName');if(pn)pn.textContent=ST.svc;ST.pv=b.dataset.svcgo;setApm('profiling');});
   }
   renderCpu();
   setApm('profiling');
